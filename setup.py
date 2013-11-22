@@ -9,7 +9,7 @@ setup (
 
      author = 'Simon Knight',
      author_email = "simon.knight@gmail.com",
-     url = "www.autonetkit.org",
+     url = "http://www.autonetkit.org",
      packages = ['autonetkit_vis'],
 
      include_package_data = True, # include data from MANIFEST.in
