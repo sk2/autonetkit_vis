@@ -1,2 +1,1 @@
 recursive-include autonetkit_vis/web_content/ *
-include autonetkit_vis/cisco.json.gz
