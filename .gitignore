@@ -4,3 +4,5 @@ autonetkit_vis.sublime-project
 autonetkit_vis.sublime-workspace
 
 *.gz
+
+autonetkit_vis.egg-info/PKG-INFO
