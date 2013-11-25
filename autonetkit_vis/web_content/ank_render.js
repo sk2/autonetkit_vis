@@ -452,7 +452,7 @@ var x_offset = 10;
 var y_offset = 30;
 
 var node_x = function(d) {
-    return d.x + x_offset + icon_width/2 + 150;
+    return d.x + x_offset + icon_width/2 + 0;
 }
 
 var node_y = function(d) {
