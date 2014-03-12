@@ -6,3 +6,5 @@ autonetkit_vis.sublime-workspace
 *.gz
 
 autonetkit_vis.egg-info/PKG-INFO
+
+autonetkit_vis.egg-info/SOURCES.txt
