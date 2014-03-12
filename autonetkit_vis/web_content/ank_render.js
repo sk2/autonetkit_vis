@@ -1698,6 +1698,35 @@ function draw_path_node_annotations(data) {
 
 function redraw_paths() {
 
+    //firstly append markers if necessary
+    path_colors = _.map(pathinfo , function(elem){ return elem['color'];
+        }).filter(function(elem){
+        return elem != null}); // filter out null elements
+
+    marker_names = _.map(path_colors , function(elem){
+        return "path_marker_" + elem; });
+
+    marker_names = ["path_marker_red", "path_marker_blue"];
+
+    chart.select("defs").selectAll("marker")
+    .data(path_colors,  //append marker for this colour if not present
+        function(d){ //index by marker name, rather than list position - allows appending later
+            return d;})
+    .enter().append("svg:marker")
+    .attr("id", function(d) { return "path_marker_" + d;})
+    .attr("refX", 2.4)
+    .attr("refY", 2)
+    //.attr("fill", "rgb(25,52,65)")
+    //.attr("stroke", "rgb(25,52,65)")
+    .attr("markerWidth", 20)
+    .attr("markerHeight", 10)
+    //.attr("markerUnits", "userSpaceOnUse")
+    .attr("orient", "auto")
+    .attr("fill", function(d) { return d;} ) //see if can use this
+    .attr("stroke", function(d) { return d;})
+    .append("svg:path")
+    .attr("d", "M0,0 V4 L2,2 Z");
+
     //animation based on http://bl.ocks.org/duopixel/4063326
     var svg_line = d3.svg.line()
         .x(path_x)
@@ -1725,29 +1754,11 @@ function redraw_paths() {
     }
 
     var path_marker_end = function(d) {
-        path_color = path_color(d);
+        path_color = get_path_color(d);
         marker_name = "path_marker_" + path_color;
+        console.log(marker_name);
 
-        chart.select("defs").selectAll("marker")
-        .data([marker_name],  //append marker for this colour if not present
-            function(d){ //index by marker name, rather than list position - allows appending later
-                return d;})
-        .enter().append("svg:marker")
-        .attr("id", String)
-        .attr("refX", 2.4)
-        .attr("refY", 2)
-        //.attr("fill", "rgb(25,52,65)")
-        //.attr("stroke", "rgb(25,52,65)")
-        .attr("markerWidth", 20)
-        .attr("markerHeight", 10)
-        //.attr("markerUnits", "userSpaceOnUse")
-        .attr("orient", "auto")
-        .append("svg:path")
-        .attr("fill", path_color)
-        .attr("stroke", path_color)
-        .attr("d", "M0,0 V4 L2,2 Z");
-
-    return "url(#" + marker_name + ")";
+        return "url(#" + marker_name + ")";
 
         if ("verified" in d && d['verified'] == true) {
             return "url(#path_verified_marker)";
@@ -1758,7 +1769,7 @@ function redraw_paths() {
         return "url(#path_marker)";
     }
 
-    var path_color = function(d) {
+    var get_path_color = function(d) {
         if ("color" in d) {
             return d['color'];
         }
@@ -1779,8 +1790,8 @@ function redraw_paths() {
     trace_path.enter().append("svg:path")
         .attr("d", function(d) { return svg_line(d['path'])})
         .attr("class", "trace_path")
-        .style("stroke-width", 10)
-        .style("stroke", path_color)
+        .style("stroke-width", 7)
+        .style("stroke", get_path_color)
         .style("fill", "none")
         .attr("stroke-dasharray", function(d) {
             return path_total_length(d3.select(this)) + " " + path_total_length(d3.select(this))})
@@ -1789,7 +1800,7 @@ function redraw_paths() {
 
         trace_path
         .transition()
-        .style("stroke", path_color)
+        .style("stroke", get_path_color)
         .attr("d", function(d) { return svg_line(d['path'])})
         .ease("linear")
         .attr("stroke-dashoffset", 0)
@@ -1807,8 +1818,8 @@ function redraw_paths() {
             //path_info(d);
         })
     .on("mouseout", function(){
-        d3.select(this).style("stroke-width", "3");
-        d3.select(this).style("stroke", path_color);
+        d3.select(this).style("stroke-width", 7);
+        d3.select(this).style("stroke", get_path_color);
         draw_path_node_annotations({'host_info': []});
         //clear_label();
     })
@@ -1818,5 +1829,8 @@ function redraw_paths() {
     .duration(1000)
     .style("opacity",0)
     .remove();
+
+    //TODO: check this clear doesn't break anything - or can we pass pathinfo in locally each time? ie as param rather than ugly global?
+    pathinfo = [];
 
 }
