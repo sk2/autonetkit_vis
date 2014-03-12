@@ -690,7 +690,9 @@ var interface_info = function(d) {
 //g_traces.append("svg:defs").selectAll("marker")
 //TODO: check this still works
 chart.select("defs").selectAll("marker")
-.data(["path_marker", "path_verified_marker", "path_unverified_marker"])
+.data(["path_marker", "path_verified_marker", "path_unverified_marker"],
+    function(d){ //index by marker name, rather than list position - allows appending later
+        return d;})
 .enter().append("svg:marker")
 .attr("id", String)
 .attr("refX", 2.4)
@@ -703,6 +705,7 @@ chart.select("defs").selectAll("marker")
 .attr("orient", "auto")
 .append("svg:path")
 .attr("d", "M0,0 V4 L2,2 Z");
+
 
 var marker_end  = function(d) {
     if (jsondata.directed) {
@@ -1706,7 +1709,15 @@ function redraw_paths() {
 
     trace_path = g_traces.selectAll(".trace_path")
         .data(pathinfo, function(path) {
+            if ("id" in path) {
+                return path['id'];
+            }
+
+            return path['path']; //index by entire path contents
+
             elements = path['path'];
+            //index by the first/last elements - allows transition on path changes
+            //TODO: need a boolean that disables this if want multiple explicit paths - provide a path id in the data?
             return _.first(elements) + "_" + _.last(elements);;
         })
 
