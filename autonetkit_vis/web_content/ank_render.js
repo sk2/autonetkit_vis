@@ -1699,6 +1699,7 @@ function draw_path_node_annotations(data) {
 function redraw_paths() {
 
     //firstly append markers if necessary
+    //TODO: split out into function
     path_colors = _.map(pathinfo , function(elem){ return elem['color'];
         }).filter(function(elem){
         return elem != null}); // filter out null elements
@@ -1727,13 +1728,38 @@ function redraw_paths() {
     .append("svg:path")
     .attr("d", "M0,0 V4 L2,2 Z");
 
+
+    //tension offsets
+    path_groups = _.groupBy(pathinfo, function(d) {
+        return d['path']
+    });
+
+    var path_group_counts = {}; //stores the total
+    var path_group_multiplier = {}; //decrement
+    for (key in path_groups) {
+        val = path_groups[key];
+        path_group_counts[key] = val.length;
+        path_group_multiplier[key] = val.length;
+    };
+
+//TODO: could scale the tension multiplier based on the number of co-incident paths rather than linear
+    for (index in pathinfo) {
+        data = pathinfo[index];
+        path = data['path']; //the elements eg [r1, r2, r5]
+        coincident_paths = path_group_counts[path];
+        coincident_index = path_group_multiplier[path];
+        //decrement the multiplier for next time
+        path_group_multiplier[path]--;
+        tension_multiplier = coincident_index/coincident_paths;
+        console.log(coincident_index/coincident_paths, tension_multiplier);
+        data['tension_multiplier'] = tension_multiplier; //normalised to between [0,1]
+    }
+
     //animation based on http://bl.ocks.org/duopixel/4063326
     var svg_line = d3.svg.line()
         .x(path_x)
         .y(path_y)
         .interpolate("cardinal")
-        .tension(0.8)
-        ;
 
     trace_path = g_traces.selectAll(".trace_path")
         .data(pathinfo, function(path) {
@@ -1756,7 +1782,6 @@ function redraw_paths() {
     var path_marker_end = function(d) {
         path_color = get_path_color(d);
         marker_name = "path_marker_" + path_color;
-        console.log(marker_name);
 
         return "url(#" + marker_name + ")";
 
@@ -1787,8 +1812,18 @@ function redraw_paths() {
         return 200* _.size(d.path);
     }
 
+    var path_tension = function(d) {
+        //TODO: add differing tension if overlaid paths (ie if more than one path with same elements)
+        // range (0,1), map to (0.25,0)
+        tension_multiplier = -0.5* (1- d['tension_multiplier']);
+        return 0.7 + tension_multiplier;
+    }
+
     trace_path.enter().append("svg:path")
-        .attr("d", function(d) { return svg_line(d['path'])})
+        //.attr("d", function(d) { return svg_line(d['path'])})
+        //tension set as per https://github.com/mbostock/d3/wiki/SVG-Shapes#wiki-line_tension
+        .attr("d", function(d) { return svg_line.tension(path_tension(d))(d['path']); })
+
         .attr("class", "trace_path")
         .style("stroke-width", 7)
         .style("stroke", get_path_color)
@@ -1801,7 +1836,7 @@ function redraw_paths() {
         trace_path
         .transition()
         .style("stroke", get_path_color)
-        .attr("d", function(d) { return svg_line(d['path'])})
+        .attr("d", function(d) { return svg_line.tension(path_tension(d))(d['path']); })
         .ease("linear")
         .attr("stroke-dashoffset", 0)
         .duration(transition_time)
