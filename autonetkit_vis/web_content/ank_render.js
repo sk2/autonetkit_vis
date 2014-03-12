@@ -1726,6 +1726,28 @@ function redraw_paths() {
     }
 
     var path_marker_end = function(d) {
+        path_color = path_color(d);
+        marker_name = "path_marker_" + path_color;
+
+        chart.select("defs").selectAll("marker")
+        .data([marker_name],  //append marker for this colour if not present
+            function(d){ //index by marker name, rather than list position - allows appending later
+                return d;})
+        .enter().append("svg:marker")
+        .attr("id", String)
+        .attr("refX", 2.4)
+        .attr("refY", 2)
+        //.attr("fill", "rgb(25,52,65)")
+        //.attr("stroke", "rgb(25,52,65)")
+        .attr("markerWidth", 20)
+        .attr("markerHeight", 10)
+        //.attr("markerUnits", "userSpaceOnUse")
+        .attr("orient", "auto")
+        .append("svg:path")
+        .attr("fill", path_color)
+        .attr("stroke", path_color)
+        .attr("d", "M0,0 V4 L2,2 Z");
+
         if ("verified" in d && d['verified'] == true) {
             return "url(#path_verified_marker)";
         }
@@ -1736,6 +1758,7 @@ function redraw_paths() {
     }
 
     var path_color = function(d) {
+        if ("color" in d) {
         if ("verified" in d && d['verified'] == true) {
             return "green";
         }
@@ -1753,7 +1776,7 @@ function redraw_paths() {
         .attr("d", function(d) { return svg_line(d['path'])})
         .attr("class", "trace_path")
         .style("stroke-width", 10)
-        .style("stroke", "orange")
+        .style("stroke", path_color)
         .style("fill", "none")
         .attr("stroke-dasharray", function(d) {
             return path_total_length(d3.select(this)) + " " + path_total_length(d3.select(this))})
