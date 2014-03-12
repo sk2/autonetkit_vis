@@ -920,7 +920,6 @@ var group_info = function(d) {
 
 var node_group_id = function(d) {
 
-    group_attr = "asn";
     if (overlay_id == "nidb") {
         group_attr = "host";
     }
