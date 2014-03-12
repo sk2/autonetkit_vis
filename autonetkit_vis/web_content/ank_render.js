@@ -1748,6 +1748,8 @@ function redraw_paths() {
         .attr("stroke", path_color)
         .attr("d", "M0,0 V4 L2,2 Z");
 
+    return "url(#" + marker_name + ")";
+
         if ("verified" in d && d['verified'] == true) {
             return "url(#path_verified_marker)";
         }
@@ -1759,6 +1761,9 @@ function redraw_paths() {
 
     var path_color = function(d) {
         if ("color" in d) {
+            return d['color'];
+        }
+
         if ("verified" in d && d['verified'] == true) {
             return "green";
         }
