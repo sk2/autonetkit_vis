@@ -147,12 +147,15 @@ var apply_highlight = function(data){
 
     highlight_edges = _.map(data['edges'], function(n) {
         //Put into same form as json.links
-        src = nodes_by_id[n[0]];
+        src = nodes_by_id[n.src];
         src_index = nodes.indexOf(src);
-        target = nodes_by_id[n[1]];
+        target = nodes_by_id[n.dst];
         target_index = nodes.indexOf(target);
 
-        return {'source': src_index, 'target': target_index};
+        n['source'] = src_index;
+        n['target'] = target_index;
+        return n;
+
     })
 
     if ((data.nodes.length > 0) || (data.edges.length > 0)) {
@@ -1337,34 +1340,44 @@ function redraw() {
         }
     });
 
+    var highlight_edge_color = function(d) {
+        if ("color" in d) {
+            return d['color'];
+        }
+            return "red"; //default
+        }
+
+        var highlight_edge_width = function(d) {
+            if ("width" in d) {
+                return d['width'];
+            }
+                return 5; //default
+            }
 
     var highlight_line = g_link_highlights.selectAll(".highlight_line")
-        .data(highlight_edges)
+    .data(highlight_edges)
 
         //line.enter().append("line")
         highlight_line.enter().append("svg:path")
         .attr("class", "highlight_line")
         .attr("id",
-                function(d) {
-                    return "path"+d.source+"_"+d.target;
-                })
-    .attr("d", graph_edge)
-        .style("stroke-width", function() {
-            //TODO: use this stroke-width function on mouseout too
-            if (jsondata.directed) {
-                return 5;
-            }
-            return 5;
-        })
+            function(d) {
+                return "path"+d.source+"_"+d.target;
+            })
+        .attr("d", graph_edge)
+        .style("stroke-width", highlight_edge_width)
     //.attr("marker-end", marker_end)
-    .style("stroke", "red")
+    .style("stroke", highlight_edge_color)
         //.style("fill", "rgb(113,119,254)")
         .style("fill", "none")
 
         highlight_line.transition()
-        .duration(500)
+        .duration(1000)
         .attr("d", graph_edge)
         .style("opacity", line_opacity)
+        .style("stroke", highlight_edge_color)
+        .style("stroke-width", highlight_edge_width)
+
 
         highlight_line.exit().transition()
         .duration(1000)
