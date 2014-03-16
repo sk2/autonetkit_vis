@@ -1,43 +1,72 @@
 //TODO: see if can use underscore.js for other operations, to simplify mapping, iterationl etc
 //List concat based on http://stackoverflow.com/questions/5080028
 //
+var graph_history = [];
 
-var g_groupings = chart.append("svg:g")
-.attr("id", "g_groupings");
+var update_title = function(overlay_id, revision_id) {
+    document.title = "AutoNetkit - " + overlay_id + " r" + revision_id;
+}
 
-var g_links = chart.append("svg:g")
-.attr("id", "g_links");
+var clear_graph_history = function() {
+    graph_history = [];
+    propagate_revision_dropdown(graph_history, 0); //TODO: update this with revision from webserver
+}
 
-var g_link_highlights = chart.append("svg:g")
-.attr("id", "g_link_highlights");
+var propagate_revision_dropdown = function(d, revision_id) {
+    var revisions = d3.range(graph_history.length);
 
-var g_nodes = chart.append("svg:g")
-.attr("id", "g_nodes");
+    if (revisions.length > 1) {
+        $('#revision_select').show();
+    } else {
+        $('#revision_select').hide();
+    }
 
-var g_node_labels = chart.append("svg:g")
-.attr("id", "g_node_labels");
+    revision_dropdown
+    .selectAll("option")
+    .data(revisions)
+    .enter().append("option")
+    .attr("value", String)
+    .text(String);
+
+    $("#revision_select option[value=" + revision_id + "]").attr("selected", "selected")
+}
+
+render_topology = function(chart) {
+    //"use strict";
+
+    var g_groupings = chart.append("svg:g")
+    .attr("id", "g_groupings");
+
+    var g_links = chart.append("svg:g")
+    .attr("id", "g_links");
+
+    var g_link_highlights = chart.append("svg:g")
+    .attr("id", "g_link_highlights");
+
+    var g_nodes = chart.append("svg:g")
+    .attr("id", "g_nodes");
+
+    var g_node_labels = chart.append("svg:g")
+    .attr("id", "g_node_labels");
+
+    var g_link_labels = chart.append("svg:g")
+    .attr("id", "g_link_labels");
+
+    var g_traces = chart.append("svg:g")
+    .attr("id", "g_highlights");
+
+    var g_highlights = chart.append("svg:g")
+    .attr("id", "g_highlights");
+
+    var g_path_node_annotation_backings = chart.append("svg:g")
+    .attr("id", "g_path_node_annotation_backings");
+
+    var g_path_node_annotations = chart.append("svg:g")
+    .attr("id", "g_path_node_annotations");
 
 
-
-
-var g_link_labels = chart.append("svg:g")
-.attr("id", "g_link_labels");
-
-var g_traces = chart.append("svg:g")
-.attr("id", "g_highlights");
-
-var g_highlights = chart.append("svg:g")
-.attr("id", "g_highlights");
-
-var g_path_node_annotation_backings = chart.append("svg:g")
-.attr("id", "g_path_node_annotation_backings");
-
-var g_path_node_annotations = chart.append("svg:g")
-.attr("id", "g_path_node_annotations");
-
-
-var g_interfaces = chart.append("svg:g")
-.attr("id", "g_interfaces");
+    var g_interfaces = chart.append("svg:g")
+    .attr("id", "g_interfaces");
 
 //To store svg defs for icons
 chart.append("defs")
@@ -57,6 +86,8 @@ ws.onclose = function () {
     $("#websocket_icon").html(' <font color ="red"> <i class="icon-remove-sign " title="WebSocket Disconnected. Reload page to reconnect."></i></font>');
 };
 
+//TODO: need to create a topology/websocket object? and then pass form there?
+
 
 //TODO: make "phy" default selected
 
@@ -64,7 +95,6 @@ var nodes_by_id = {};
 
 var pathinfo = [];
 
-var graph_history = [];
 var ip_allocations = [];
 
 var node_label_id = "label";
@@ -76,7 +106,7 @@ var interface_overlay_groupings = {
     'vrf': 'vrf_name',
 }
 
-starting_hosts = [];
+var starting_hosts = [];
 
 ws.onmessage = function (evt) {
     var data = jQuery.parseJSON(evt.data);
@@ -86,9 +116,9 @@ ws.onmessage = function (evt) {
         if (overlay_id != "ip_allocations"){
             jsondata = data;
             graph_history.push(data);
-            update_title();
+            update_title(overlay_id, revision_id);
             revision_id = graph_history.length - 1;
-            propagate_revision_dropdown(graph_history); //TODO: update this with revision from webserver
+            propagate_revision_dropdown(graph_history, revision_id); //TODO: update this with revision from webserver
             ip_allocations = [];
             filtered_nodes= []; //reset filtering
             redraw_ip_allocations();
@@ -136,8 +166,8 @@ ws.onmessage = function (evt) {
     }
 }
 
-highlight_nodes = [];
-highlight_edges = [];
+var highlight_nodes = [];
+var highlight_edges = [];
 
 var apply_highlight = function(data){
 
@@ -147,10 +177,10 @@ var apply_highlight = function(data){
 
     highlight_edges = _.map(data['edges'], function(n) {
         //Put into same form as json.links
-        src = nodes_by_id[n.src];
-        src_index = nodes.indexOf(src);
-        target = nodes_by_id[n.dst];
-        target_index = nodes.indexOf(target);
+        var src = nodes_by_id[n.src];
+        var src_index = nodes.indexOf(src);
+        var target = nodes_by_id[n.dst];
+        var target_index = nodes.indexOf(target);
 
         n['source'] = src_index;
         n['target'] = target_index;
@@ -166,15 +196,15 @@ var apply_highlight = function(data){
     //draw paths after redraw -> z-ordering means overlayed
     //pathinfo = []; //reset
     if (data.paths.length > 0) {
-        for (index in data.paths) {
-            path = data.paths[index];
+        for (var index in data.paths) {
+            var path = data.paths[index];
             //path_nodes = _.map(path, function(n) {
                 //return nodes_by_id[n];
             //})
-            pathinfo.push(path);
-        }
-        redraw_paths();
-    }
+pathinfo.push(path);
+}
+redraw_paths();
+}
 }
 
 var load_ip_allocations = function(d) {
@@ -184,7 +214,7 @@ var load_ip_allocations = function(d) {
 var ip_node_info = function(d) {
     var children = "" ;
 
-    for (index in d.children) {
+    for (var index in d.children) {
         child = d.children[index];
         children += "(" + child.name + ", " + child.subnet + ") ";
     }
@@ -198,29 +228,29 @@ function redraw_ip_allocations() {
         //.projection(function(d) { return [d.y + 100, d.x]; });
         .projection(function(d) { return [d.y + 80, d.x]; });
 
-    var layout = d3.layout.tree().size([700,500]);
+        var layout = d3.layout.tree().size([700,500]);
 
-    var nodes = layout.nodes(ip_allocations);
-    if (ip_allocations.length == 0) {
+        var nodes = layout.nodes(ip_allocations);
+        if (ip_allocations.length == 0) {
         nodes = []; //otherwise have single root node always present
     }
 
     var node = g_nodes.selectAll("g.node")
-        .data(nodes, name)
-        node.enter().append("svg:g")
-        .attr("transform", function(d) { return "translate(" + (d.y + 80) + "," + d.x +  ")"; })
+    .data(nodes, name)
+    node.enter().append("svg:g")
+    .attr("transform", function(d) { return "translate(" + (d.y + 80) + "," + d.x +  ")"; })
 
-        var nodeEnter = node.enter().append("svg:g")
-        .attr("class", "node")
-        .attr("transform", function(d) { return "translate(" + (d.y + 80) + "," + d.x +  ")"; });
+    var nodeEnter = node.enter().append("svg:g")
+    .attr("class", "node")
+    .attr("transform", function(d) { return "translate(" + (d.y + 80) + "," + d.x +  ")"; });
 
     nodeEnter.append("svg:circle")
-        .attr("class", "ip_node")
-        .attr("r", 1e-6)
-        .attr("fill", "steelblue")
-        .on("mouseover", function(d){
-            d3.select(this).style("fill", "orange");
-        })
+    .attr("class", "ip_node")
+    .attr("r", 1e-6)
+    .attr("fill", "steelblue")
+    .on("mouseover", function(d){
+        d3.select(this).style("fill", "orange");
+    })
     .on("mouseout", function(){
         d3.select(this).style("fill", "steelblue");
     });
@@ -231,113 +261,96 @@ function redraw_ip_allocations() {
         html: true,
         title: function() {
             var d = this.__data__
-        return ip_node_info(d);
+            return ip_node_info(d);
         }
     });
 
 
     var nodeUpdate = node.transition()
-        .duration(500)
-        .attr("transform", function(d) { return "translate(" + (d.y + 80) + "," + d.x + ")"; });
+    .duration(500)
+    .attr("transform", function(d) { return "translate(" + (d.y + 80) + "," + d.x + ")"; });
 
     //TODO: fix issue with node names
 
     nodeUpdate.select("circle")
-        .attr("r", 6);
+    .attr("r", 6);
     //TODO: map colour to node type: edge, collision domain, subnet, l3_device
 
     // Add the dot at every node
     var nodeExit = node.exit().transition()
-        .duration(500)
-        .attr("transform", function(d) { return "translate(" + (d.y + 80) + "," + d.x + ")"; })
-        .remove();
+    .duration(500)
+    .attr("transform", function(d) { return "translate(" + (d.y + 80) + "," + d.x + ")"; })
+    .remove();
 
     nodeExit.select("circle")
-        .attr("r", 1e-6);
+    .attr("r", 1e-6);
 
     nodeEnter.append("svg:text")
-        .attr("x", function(d) { return d.children || d._children ? -15 : 15; })
-        .attr("dy", ".3em")
+    .attr("x", function(d) { return d.children || d._children ? -15 : 15; })
+    .attr("dy", ".3em")
         .attr("text-anchor", function(d) { return d.children || d._children ? "end" : "start"; }) //left if children otherwise right
         .attr("font-family", "helvetica")
         .attr("font-size", 10)
         .text(function(d) { return d.name; })
         .style("fill-opacity", 1e-6);
 
-    nodeUpdate.select("text")
+        nodeUpdate.select("text")
         .text(function(d) { return d.name; })
         .style("fill-opacity", 1);
 
-    nodeExit.select("text")
+        nodeExit.select("text")
         .style("fill-opacity", 1e-6);
 
     // Update the links…
     var link = g_links.selectAll("path.link")
-        .data(layout.links(nodes, name), function(d) { return d.target.id; });
+    .data(layout.links(nodes, name), function(d) { return d.target.id; });
 
     // Enter any new links at the parent's previous position.
     link.enter().insert("svg:path", "g")
-        .attr("class", "link")
-        .attr("d", diagonal)
-        .transition()
-        .duration(500)
-        .attr("d", diagonal);
+    .attr("class", "link")
+    .attr("d", diagonal)
+    .transition()
+    .duration(500)
+    .attr("d", diagonal);
 
     // Transition links to their new position.
     link.transition()
-        .duration(500)
-        .attr("d", diagonal);
+    .duration(500)
+    .attr("d", diagonal);
 
     // Transition exiting nodes to the parent's new position.
     link.exit().transition()
-        .duration(500)
-        .attr("d", diagonal)
-        .style("opacity", 1e-6)
-        .remove();
+    .duration(500)
+    .attr("d", diagonal)
+    .style("opacity", 1e-6)
+    .remove();
 }
 
 var propagate_overlay_dropdown = function(d) {
     $("#overlay_select").empty();
     d.push('ip_allocations'); //manually append as not in graph overlay list
     overlay_dropdown
-        .selectAll("option")
-        .data(d)
-        .enter().append("option")
-        .attr("value", String)
-        .text(String);
+    .selectAll("option")
+    .data(d)
+    .enter().append("option")
+    .attr("value", String)
+    .text(String);
 
     //TODO only set the first time around?
     $("#overlay_select option[value=" + overlay_id + "]").attr("selected", "selected")
 }
 
-var propagate_revision_dropdown = function(d) {
-    revisions = d3.range(graph_history.length);
 
-    if (revisions.length > 1) {
-        $('#revision_select').show();
-    } else {
-        $('#revision_select').hide();
-    }
-
-    revision_dropdown
-        .selectAll("option")
-        .data(revisions)
-        .enter().append("option")
-        .attr("value", String)
-        .text(String);
-
-    $("#revision_select option[value=" + revision_id + "]").attr("selected", "selected")
-}
 
 var propagate_node_label_select = function(d) {
     $("#node_label_select").empty();
     d.unshift("None"); //Add option to clear edge labels
     node_label_select
-        .selectAll("option")
-        .data(d)
-        .enter().append("option")
-        .attr("value", String)
-        .text(String);
+    .selectAll("option")
+    .data(d)
+    .enter().append("option")
+    .attr("value", String)
+    .text(String);
 
     //TODO only set the first time around?
     $("#node_label_select option[value=" + node_label_id + "]").attr("selected", "selected")
@@ -349,11 +362,11 @@ var propagate_interface_label_select = function(d) {
     d.unshift("None"); //Add option to clear edge labels
 
     interface_label_select
-        .selectAll("option")
-        .data(d)
-        .enter().append("option")
-        .attr("value", String)
-        .text(String);
+    .selectAll("option")
+    .data(d)
+    .enter().append("option")
+    .attr("value", String)
+    .text(String);
 
     //TODO only set the first time around?
     $("#interface_label_select option[value=" + interface_label_id + "]").attr("selected", "selected")
@@ -366,12 +379,12 @@ var propagate_edge_group_select = function(d) {
     d.unshift("None"); //Add option to clear edge labels
 
     var dropdown = edge_group_select
-        .selectAll("option")
-        .data(d)
+    .selectAll("option")
+    .data(d)
 
-        dropdown.enter().append("option")
-        .attr("value", String)
-        .text(String);
+    dropdown.enter().append("option")
+    .attr("value", String)
+    .text(String);
 
     //TODO only set the first time around?
     $("#edge_group_select option[value=" + edge_group_id + "]").attr("selected", "selected")
@@ -383,9 +396,9 @@ var load_revision = function() {
     update_title();
     jsondata = graph_history[revision_id];
     $("#revision_select option[value=" + revision_id + "]").attr("selected", "selected")
-        if (print_each_revision) {
-            window.print();
-        }
+    if (print_each_revision) {
+        window.print();
+    }
 }
 
 //dropdown.select("phy").text("selected");
@@ -439,14 +452,9 @@ var edge_id = function(d) {
 }
 
 
-var update_title = function() {
-    document.title = "AutoNetkit - " + overlay_id + " r" + revision_id;
-}
 
-var clear_graph_history = function() {
-    graph_history = [];
-    propagate_revision_dropdown(graph_history); //TODO: update this with revision from webserver
-}
+
+
 
 
 //TODO: replace all 32 magic numbers with icon_offset
@@ -547,11 +555,11 @@ var groupPath = function(d) {
         } else {
             interface_offset = 5;
             retval = "M" +
-                d3.geom.hull(d.values.map(function(i) {
-                    return [interface_x(i) + interface_offset, interface_y(i) + interface_offset];
-                }))
+            d3.geom.hull(d.values.map(function(i) {
+                return [interface_x(i) + interface_offset, interface_y(i) + interface_offset];
+            }))
             .join("L")
-                + "Z";
+            + "Z";
             return retval;
         }
         return;
@@ -560,7 +568,7 @@ var groupPath = function(d) {
     if (d.values.length  == 1) {
         node = d.values[0];
         offset = 5;
-        retval =  "M" ;
+        var retval =  "M" ;
         retval += (node.x - offset  + icon_offset + x_offset) + "," + (node.y - offset + icon_offset + y_offset) + "L";
         retval += (node.x + offset  + icon_offset + x_offset) + "," + (node.y - offset + icon_offset + y_offset) + "L";
         retval += (node.x - offset  + icon_offset + x_offset) + "," + (node.y + offset + icon_offset + y_offset) + "L";
@@ -591,7 +599,7 @@ var groupPath = function(d) {
         lower_x = lower_node.x;
         lower_y = lower_node.y;
         offset = 0.1;
-        retval =  "M" ;
+        var retval =  "M" ;
         retval += (upper_x - offset  + icon_offset + x_offset) + "," + (upper_y - offset + icon_offset + y_offset) + "L";
         retval += (upper_x + offset + icon_offset + x_offset) + "," + (upper_y - offset + icon_offset + y_offset) + "L";
         retval += (lower_x + offset + icon_offset + x_offset) + "," + (lower_y + offset + icon_offset + y_offset) + "L";
@@ -599,28 +607,28 @@ var groupPath = function(d) {
         retval += "Z";
         return retval;
     }
-    retval = "M" +
-        d3.geom.hull(d.values.map(function(i) { return [i.x + x_offset + icon_width/2, i.y + y_offset + icon_height/2]; }))
-        .join("L")
-        + "Z";
+    var retval = "M" +
+    d3.geom.hull(d.values.map(function(i) { return [i.x + x_offset + icon_width/2, i.y + y_offset + icon_height/2]; }))
+    .join("L")
+    + "Z";
     return retval;
 }
 
 var path_x = function(d) {
-    node = nodes_by_id[d];
+    var node = nodes_by_id[d];
     return node.x + icon_width/2 + x_offset;
 }
 
 var path_y = function(d) {
-    node = nodes_by_id[d];
+    var node = nodes_by_id[d];
     return node.y+ icon_height/2 + y_offset;
 }
 
 var data_to_li = function(d, depth) {
     //TODO: may want to limit recursion depth
-    max_depth = 1;
-    text = "<ul>"; //begin the unordered list
-    for (attr in d) {
+    var max_depth = 1;
+    var text = "<ul>"; //begin the unordered list
+    for (var attr in d) {
         if(_.isArray(d[attr])) {
             text += "<li><b>" + attr + ":</b> ";
             text += d[attr].join(", ");
@@ -644,7 +652,7 @@ var data_to_li = function(d, depth) {
 //TODO: make recursive, if type is object and not null then call, and repeat...
 var node_info = function(d) {
     //TODO: append ul/li like table example on http://christopheviau.com/d3_tutorial/
-    text = d.id;
+    var text = d.id;
     text += data_to_li(d, 0);
     text = "<b>Node</b>: " + text;
     return text;
@@ -656,11 +664,11 @@ var path_info = function(d) {
 }
 
 var link_info = function(d) {
-    source = nodes[d.source];
-    target = nodes[d.target];
-    text = source.id + " - " + target.id; //TODO: make sure all have labels from graphics appended overlay
+    var source = nodes[d.source];
+    var target = nodes[d.target];
+    var text = source.id + " - " + target.id; //TODO: make sure all have labels from graphics appended overlay
 
-    for (attr in d) {
+    for (var attr in d) {
         //TODO use list membership test here instead
         if (d[attr] != null && d[attr] != "None" && attr != "source" & attr != "target" && attr != "_interfaces" && attr != "edge_id") {
             text += ", " + attr + ": " + d[attr];
@@ -677,7 +685,7 @@ var interface_info = function(d) {
     text = "<ul>"; //begin the unordered list
     text += "<li><b>node:</b> " + d.node.id + "</li>"; //add the key/val
     text += "<li><b>interface:</b> " + d.interface + "</li>"; //add the key/val
-    for (attr in int_data) {
+    for (var attr in int_data) {
         text += "<li><b>" + attr + ":</b> " + int_data[attr] + "</li>"; //add the key/val
     }
     text += "<ul>"; //finish the unordered list
@@ -731,8 +739,8 @@ var graph_edge = function(d) {
 
     if (jsondata.directed) {
         var dx = target_x - source_x,
-            dy = target_y - source_y,
-               dr = Math.sqrt(dx * dx + dy * dy);
+        dy = target_y - source_y,
+        dr = Math.sqrt(dx * dx + dy * dy);
         //dr = 1.2 * dr;
         //return "M" + source_x + "," + source_y + "A" + dr + "," + dr + " 0 0,1 " + target_x + "," + target_y;
         var points = [];
@@ -822,8 +830,8 @@ var link_label_x = function(d) {
 
 var link_label_y = function(d) {
 
-    source = nodes[d.source];
-    target = nodes[d.target];
+    var source = nodes[d.source];
+    var target = nodes[d.target];
 
     if (jsondata.directed) {
         source = nodes[d.source];
@@ -886,18 +894,18 @@ var history_forward = function() {
 $(document).keydown(function(e){
     switch(e.which) {
         case 37: // left
-            history_back();
-            break;
+        history_back();
+        break;
 
         case 38: // up
-            break;
+        break;
 
         case 39: // right
-            history_forward();
-            break;
+        history_forward();
+        break;
 
         case 40: // down
-            break;
+        break;
 
         default: return; // exit this handler for other keys
     }
@@ -910,6 +918,7 @@ $(document).keydown(function(e){
 var group_attr = "asn";
 
 var group_info = function(d) {
+    var text = "";
     if (overlay_id in interface_overlay_groupings) {
         //string tuple of "asn,grouping_attr"
         var data = d.key.split(",");
@@ -971,25 +980,25 @@ var zoom_fit = function() {
 
         var zoom_box = d3.select(".zoom_box")
 
-            zoom_box.transition()
-            .attr("transform", "scale(" + p + ")")
-            .duration(500)
+        zoom_box.transition()
+        .attr("transform", "scale(" + p + ")")
+        .duration(500)
             //redraw();
+        }
     }
-}
 
-var filtered_nodes = [];
+    var filtered_nodes = [];
 
-function numeric_strings_to_float(array){
-    array = _.map(array, function(x) {
+    function numeric_strings_to_float(array){
+        array = _.map(array, function(x) {
         if ($.isNumeric(x.value)) x.value = parseFloat(x.value); //float if numeric
         return x;
     });
-    return array;
-}
+        return array;
+    }
 
-function serialized_array_to_grouped_list(array) {
-    array = _.groupBy(array, function(x) { return x.name});
+    function serialized_array_to_grouped_list(array) {
+        array = _.groupBy(array, function(x) { return x.name});
     //extract out grouped items to format: [['asn', [1, 2, 3,]]], etc
     array = _.map(array, function(group_items, key, l) {
         return [key, _.map(group_items, function(item){ return item.value})];
@@ -1069,15 +1078,15 @@ function redraw() {
     propagate_node_label_select(node_attributes);
 
     //TODO: combine with node attributes to just take the keys from the groupby for efficiency
-    node_attribute_unique_values = [];
+    var node_attribute_unique_values = [];
     node_attributes.forEach(function(attribute) {
-        values = _.uniq(_.pluck(nodes, attribute));
+        var values = _.uniq(_.pluck(nodes, attribute));
         node_attribute_unique_values.push([attribute, values]);
     });
 
     // apply these to form
-    skip_attributes = Array("_interfaces", "None", "id", "label", "x", "y");
-    filtered_attributes = _.reject(node_attribute_unique_values, function(x){
+    var skip_attributes = Array("_interfaces", "None", "id", "label", "x", "y");
+    var filtered_attributes = _.reject(node_attribute_unique_values, function(x){
         if (x[1].length == 1 && x[1][0] == null) return true; // don't display attributes that are only null
         if (x[1].length > 10) return true; // don't display attributes for long lists
         return _.contains(skip_attributes, x[0]); //reject attributes in skip_attributes
@@ -1086,7 +1095,7 @@ function redraw() {
     var form = '<b>' + "<i class='icon-filter '></i> " + 'Filter:</b><br>';
     form += '<form action="javascript:applyNodeFilter()" id="nodeFilterForm" name="nodeFilterForm">';
     form += "<table>";
-    previous_form_values = $("#nodeFilterForm").serializeArray();
+    var previous_form_values = $("#nodeFilterForm").serializeArray();
     previous_form_values = numeric_strings_to_float(previous_form_values);
     previous_form_values = serialized_array_to_grouped_list(previous_form_values);
     previous_form_values = _.object(previous_form_values);
@@ -1123,17 +1132,17 @@ function redraw() {
     edge_attributes = _.uniq(edge_attributes);
     propagate_edge_group_select(edge_attributes);
 
-    interface_attributes = [];
+    var interface_attributes = [];
 
     //TODO: make this a memoized function to save computation
     interface_attributes = _.map(nodes, function(node) {
-        return _.map(node._interfaces, function(interface){
-            return _.keys(interface);
+        return _.map(node._interfaces, function(data){
+            return _.keys(data);
         });
     });
     //collapse from hierarchical nested structure
-    interface_attributes_flattened = _.flatten(interface_attributes);
-    interface_attributes_unique = _.uniq(interface_attributes_flattened);
+    var interface_attributes_flattened = _.flatten(interface_attributes);
+    var interface_attributes_unique = _.uniq(interface_attributes_flattened);
     propagate_interface_label_select(interface_attributes_unique);
 
     node_attr_groups = d3.nest().key( node_group_id ).entries(nodes);
@@ -1170,7 +1179,7 @@ function redraw() {
 
         interface_data = _.flatten(interface_data); //collapse from hierarchical nested structure
     } else {
-        interface_data = {}; //reset
+        var interface_data = {}; //reset
     }
 
 
@@ -1183,7 +1192,7 @@ function redraw() {
         return asn + "," + area;
     }
 
-    interface_attr_groups = d3.nest().key( interface_area ).entries(interface_data);
+    var interface_attr_groups = d3.nest().key( interface_area ).entries(interface_data);
 
     if (display_interfaces && overlay_id in interface_overlay_groupings) {
         node_attr_groups = interface_attr_groups;
@@ -1196,9 +1205,9 @@ function redraw() {
         return 80;
     }
 
-    group_size = _.size(node_attr_groups)
+    var group_size = _.size(node_attr_groups)
     //TODO: make this a max function
-    range_group_size = group_size;
+    var range_group_size = group_size;
     if (group_size < 3) {
         range_group_size = 3; // for colorbrewer
     }
@@ -1213,33 +1222,33 @@ function redraw() {
     var groupFill = function(d, i) { return fill(i); };
 
     //TODO: make group path change/exit with node data
-    groupings = g_groupings.selectAll(".attr_group")
-        .data(node_attr_groups)
+    var groupings = g_groupings.selectAll(".attr_group")
+    .data(node_attr_groups)
 
-        groupings.enter().insert("path")
-        .attr("class", "attr_group")
-        .attr("d", groupPath)
-        .style("fill", groupFill)
-        .style("stroke", groupFill)
-        .style("stroke-width", hull_stroke_width)
-        .style("stroke-linejoin", "round")
-        .style("opacity", 0.4)
-        .on("mouseover", function(d){
-            group_info(d);
-        })
+    groupings.enter().insert("path")
+    .attr("class", "attr_group")
+    .attr("d", groupPath)
+    .style("fill", groupFill)
+    .style("stroke", groupFill)
+    .style("stroke-width", hull_stroke_width)
+    .style("stroke-linejoin", "round")
+    .style("opacity", 0.4)
+    .on("mouseover", function(d){
+        group_info(d);
+    })
     .on("mouseout", function(){
         clear_label();
     });
     ;
     groupings.transition()
-        .duration(500)
-        .attr("d", groupPath)
-        .style("stroke-width", hull_stroke_width)
+    .duration(500)
+    .attr("d", groupPath)
+    .style("stroke-width", hull_stroke_width)
 
-        groupings.exit().transition()
-        .duration(1000)
-        .style("opacity",0)
-        .remove();
+    groupings.exit().transition()
+    .duration(1000)
+    .style("opacity",0)
+    .remove();
 
     $('.attr_group').tipsy({
         //based on http://bl.ocks.org/1373263
@@ -1247,40 +1256,40 @@ function redraw() {
         html: true,
         title: function() {
             var d = this.__data__
-        return group_info(d);
+            return group_info(d);
         }
     });
 
     //TODO: filter the json data x and y ranges: store in nodes, and use this for the image plotting
 
-    node_highlight = g_highlights.selectAll(".node_highlight")
-        .data(highlight_nodes, function(d) { return d.id;})
+    var node_highlight = g_highlights.selectAll(".node_highlight")
+    .data(highlight_nodes, function(d) { return d.id;})
 
-        node_highlight.enter().append("svg:rect")
-        .attr("class", "node_highlight")
-        .attr("width", icon_width + 20 )
-        .attr("height", icon_height + 20)
-        .style("stroke", "red")
-        .style("stroke-width", 2)
-        .style("fill", "none")
-        .attr("x", function(d) { return d.x + x_offset - 20/2; })
-        .attr("y", function(d) { return d.y + y_offset - 20/2; })
-        .style("opacity", 40)
+    node_highlight.enter().append("svg:rect")
+    .attr("class", "node_highlight")
+    .attr("width", icon_width + 20 )
+    .attr("height", icon_height + 20)
+    .style("stroke", "red")
+    .style("stroke-width", 2)
+    .style("fill", "none")
+    .attr("x", function(d) { return d.x + x_offset - 20/2; })
+    .attr("y", function(d) { return d.y + y_offset - 20/2; })
+    .style("opacity", 40)
 
-        node_highlight
-        .transition()
-        .style("opacity", 100)
-        .duration(500)
+    node_highlight
+    .transition()
+    .style("opacity", 100)
+    .duration(500)
 
-        node_highlight.exit().transition()
-        .duration(1000)
-        .style("opacity",0)
-        .remove();
+    node_highlight.exit().transition()
+    .duration(1000)
+    .style("opacity",0)
+    .remove();
 
 
     var line = g_links.selectAll(".link_edge")
-        .data(jsondata.links,
-                function(d) { return d.source + "_" +  d.target})
+    .data(jsondata.links,
+        function(d) { return d.source + "_" +  d.target})
 
         //line.enter().append("line")
         line.enter().append("svg:path")
@@ -1290,8 +1299,8 @@ function redraw() {
                 //function(d) {
                     //return "path"+d.source+"_"+d.target;
                 //})
-    .attr("d", graph_edge)
-        .style("stroke-width", function() {
+.attr("d", graph_edge)
+.style("stroke-width", function() {
             //TODO: use this stroke-width function on mouseout too
             if (jsondata.directed) {
                 return 2;
@@ -1311,8 +1320,8 @@ function redraw() {
             d3.select(this).attr("marker-end", "");
             link_info(d);
         })
-    .on("mouseout", function(){
-        d3.select(this).style("stroke-width", "2");
+        .on("mouseout", function(){
+            d3.select(this).style("stroke-width", "2");
         //d3.select(this).style("stroke", "rgb(103,109,244)");
         d3.select(this).style("stroke", "rgb(2,106 ,155)");
         d3.select(this).style("fill", "none");
@@ -1320,7 +1329,7 @@ function redraw() {
         clear_label();
     })
 
-    line.transition()
+        line.transition()
         .duration(500)
         .attr("d", graph_edge)
         .style("opacity", line_opacity)
@@ -1330,20 +1339,20 @@ function redraw() {
         .style("opacity",0)
         .remove();
 
-    $('.link_edge').tipsy({
+        $('.link_edge').tipsy({
         //based on http://bl.ocks.org/1373263
         gravity: 'w',
         html: true,
         title: function() {
             var d = this.__data__
-        return link_info(d);
+            return link_info(d);
         }
     });
 
-    var highlight_edge_color = function(d) {
-        if ("color" in d) {
-            return d['color'];
-        }
+        var highlight_edge_color = function(d) {
+            if ("color" in d) {
+                return d['color'];
+            }
             return "red"; //default
         }
 
@@ -1354,8 +1363,8 @@ function redraw() {
                 return 5; //default
             }
 
-    var highlight_line = g_link_highlights.selectAll(".highlight_line")
-    .data(highlight_edges)
+            var highlight_line = g_link_highlights.selectAll(".highlight_line")
+            .data(highlight_edges)
 
         //line.enter().append("line")
         highlight_line.enter().append("svg:path")
@@ -1384,7 +1393,7 @@ function redraw() {
         .style("opacity",0)
         .remove();
 
-    starting_circles = chart.selectAll(".starting_circle")
+        var starting_circles = chart.selectAll(".starting_circle")
         .data(starting_hosts, function(d) { return d.id;})
 
         starting_circles.enter().append("svg:circle")
@@ -1399,7 +1408,7 @@ function redraw() {
         .style("opacity",0)
         .duration(4000);
 
-    interface_icons = g_interfaces.selectAll(".interface_icon")
+        var interface_icons = g_interfaces.selectAll(".interface_icon")
         //.data(interface_data) //TODO: check if need to provide an index
         //TODO: check if should return tuple of interface, node for uniqueness (esp for switching overlays)
         .data(interface_data, function(d) { return (d.node, d.interface);})
@@ -1411,11 +1420,11 @@ function redraw() {
     //TODO: fix issue with interface id changing -> interfaces appear/reappear
 
     interface_icons.enter().append("svg:rect")
-        .attr("class", "interface_icon")
-        .attr("width", interface_width)
-        .attr("height", interface_height)
-        .attr("x", interface_x)
-        .attr("y", interface_y)
+    .attr("class", "interface_icon")
+    .attr("width", interface_width)
+    .attr("height", interface_height)
+    .attr("x", interface_x)
+    .attr("y", interface_y)
         //.style("opacity", 0)
 
         interface_icons
@@ -1430,35 +1439,35 @@ function redraw() {
             d3.select(this).style("stroke-width", "2");
             d3.select(this).attr("marker-end", "");
         })
-    .on("mouseout", function(){
-        d3.select(this).style("stroke-width", "2");
-        d3.select(this).style("stroke", "none");
-        d3.select(this).style("fill", "rgb(6,120,155)");
+        .on("mouseout", function(){
+            d3.select(this).style("stroke-width", "2");
+            d3.select(this).style("stroke", "none");
+            d3.select(this).style("fill", "rgb(6,120,155)");
         //d3.select(this).attr("marker-end", marker_end);
     })
 
-    $('.interface_icon').tipsy({
+        $('.interface_icon').tipsy({
         //based on http://bl.ocks.org/1373263
         gravity: 'w',
-    html: true,
-    title: function() {
-        var d = this.__data__
-        return interface_info(d);
-    }
+        html: true,
+        title: function() {
+            var d = this.__data__
+            return interface_info(d);
+        }
     });
 
-    interface_icons.transition()
+        interface_icons.transition()
         .attr("x", interface_x)
         .attr("y", interface_y)
         //.style("opacity", interface_opacity)
         .duration(500);
 
-    interface_icons.exit().transition()
+        interface_icons.exit().transition()
         .duration(500)
         //.style("opacity",0)
         .remove();
 
-    interface_labels = g_interfaces.selectAll(".interface_label")
+        var interface_labels = g_interfaces.selectAll(".interface_label")
         .data(interface_data, function(d) { return d.interface;})
 
         interface_labels.enter().append("text")
@@ -1476,7 +1485,7 @@ function redraw() {
         .attr("dy", -interface_height + 3) // vertical-align: middle
         .text(interface_label);
 
-    interface_labels.transition()
+        interface_labels.transition()
         .attr("x", interface_x)
         .attr("y", interface_y)
         .duration(500)
@@ -1487,16 +1496,16 @@ function redraw() {
         .remove();
 
     //Link labels
-    link_labels = g_link_labels.selectAll(".link_label")
-        .data(jsondata.links, edge_id)
+    var link_labels = g_link_labels.selectAll(".link_label")
+    .data(jsondata.links, edge_id)
 
-        link_labels.enter().append("text")
-        .attr("x",link_label_x)
-        .attr("y", link_label_y )
-        .attr("class", "link_label")
-        .attr("text-anchor", "middle")
-        .attr("font-family", "helvetica")
-        .attr("font-size", "small")
+    link_labels.enter().append("text")
+    .attr("x",link_label_x)
+    .attr("y", link_label_y )
+    .attr("class", "link_label")
+    .attr("text-anchor", "middle")
+    .attr("font-family", "helvetica")
+    .attr("font-size", "small")
 
         //TODO: use a general accessor for x/y of nodes
         link_labels
@@ -1513,7 +1522,7 @@ function redraw() {
             return d[edge_group_id];
         });
 
-    link_labels.transition()
+        link_labels.transition()
         .attr("x",link_label_x)
         .attr("y", link_label_y )
         .duration(500)
@@ -1523,37 +1532,37 @@ function redraw() {
         .style("opacity",0)
         .remove();
 
-    var node_id = function(d) {
-        return d.label + d.network;
-    }
-
-    var node_icon = function(d) {
-        retval = d.device_type;
-        if (d.device_subtype != null && d.device_subtype != "None") {
-            retval += "_" + d.device_subtype;
+        var node_id = function(d) {
+            return d.label + d.network;
         }
-        return retval;
-    }
+
+        var node_icon = function(d) {
+            var retval = d.device_type;
+            if (d.device_subtype != null && d.device_subtype != "None") {
+                retval += "_" + d.device_subtype;
+            }
+            return retval;
+        }
 
     //Append any new device icons found
-    device_type_subtypes = _.map(nodes, node_icon);
+    var device_type_subtypes = _.map(nodes, node_icon);
     device_type_subtypes = _.uniq(device_type_subtypes);
     chart.select("defs")
-        .selectAll(".icondef")
-        .data(device_type_subtypes, function(d){  return d;})
-        .enter()
-        .append("image")
-        .attr("class", "icondef")
-        .attr("xlink:href", function (d){ return "icons/" + d + ".svg";})
-        .attr("id", function(d) {return "icon_" + d})
-        .attr("width", icon_width)
-        .attr("height", icon_height);
+    .selectAll(".icondef")
+    .data(device_type_subtypes, function(d){  return d;})
+    .enter()
+    .append("image")
+    .attr("class", "icondef")
+    .attr("xlink:href", function (d){ return "icons/" + d + ".svg";})
+    .attr("id", function(d) {return "icon_" + d})
+    .attr("width", icon_width)
+    .attr("height", icon_height);
 
     var image = g_nodes.selectAll(".device_icon")
         //.attr("xlink:href", icon)
         .data(nodes, function(d) { return d.id});
 
-    image.enter().append("use")
+        image.enter().append("use")
         .attr("class", "device_icon")
         .attr("xlink:href", function(d) {return "#icon_" + node_icon(d)})
         .attr("x", function(d) { return d.x + x_offset; })
@@ -1565,10 +1574,10 @@ function redraw() {
             node_info(d);
             //d3.select(this).attr("xlink:href", icon); //TODO: check why need to do this
         })
-    .on("mouseout", function(){
-        clear_label();
-    })
-    .append("svg:title")
+        .on("mouseout", function(){
+            clear_label();
+        })
+        .append("svg:title")
         .text(function(d) { return d.id; })
 
         image
@@ -1585,17 +1594,17 @@ function redraw() {
         .style("opacity",0)
         .remove();
 
-    $('.device_icon').tipsy({
+        $('.device_icon').tipsy({
         //based on http://bl.ocks.org/1373263
         gravity: 'w',
         html: true,
         title: function() {
             var d = this.__data__
-        return node_info(d);
+            return node_info(d);
         }
     });
 
-    device_labels = g_node_labels.selectAll(".device_label")
+        var device_labels = g_node_labels.selectAll(".device_label")
         .data(nodes, function(d) { return d.id});
 
         device_labels.enter().append("text")
@@ -1613,7 +1622,7 @@ function redraw() {
         .attr("dy", icon_height + 3) // vertical-align: middle
         .text(device_label);
 
-    device_labels.transition()
+        device_labels.transition()
         .attr("x", function(d) { return d.x + x_offset; })
         .attr("y", function(d) { return d.y + y_offset + 3; })
         .style("opacity", icon_opacity)
@@ -1629,9 +1638,9 @@ function redraw() {
         //reset paths
         pathinfo = [];
         redraw_paths();
-        }
+    }
 
-var node_annotation = function(d) {
+    var node_annotation = function(d) {
     //TODO: iterate over node, concatenate items
     //use host first, then others
     retval = "";
@@ -1661,33 +1670,33 @@ function draw_path_node_annotations(data) {
         return nodes_by_id[host_id].y;
     }
 
-    path_node_annotation_backings = g_path_node_annotation_backings.selectAll(".path_node_annotation_backing")
-        .data(host_info, function(d) { return d.host});
+    var path_node_annotation_backings = g_path_node_annotation_backings.selectAll(".path_node_annotation_backing")
+    .data(host_info, function(d) { return d.host});
 
     path_node_annotation_backings.enter().append("rect")
-        .attr("x", function(d) { return annotation_x(d.host) + x_offset - icon_width/2; })
-        .attr("y", function(d) { return annotation_y(d.host) + y_offset + icon_height/2; } )
-        .attr("height", 50)
-        .attr("width", 120)
-        .attr("class", "path_node_annotation_backing")
-        .attr("fill", "white")
-        .style("opacity", 0.8)
+    .attr("x", function(d) { return annotation_x(d.host) + x_offset - icon_width/2; })
+    .attr("y", function(d) { return annotation_y(d.host) + y_offset + icon_height/2; } )
+    .attr("height", 50)
+    .attr("width", 120)
+    .attr("class", "path_node_annotation_backing")
+    .attr("fill", "white")
+    .style("opacity", 0.8)
 
-        path_node_annotation_backings.exit().transition()
-        .duration(500)
-        .style("opacity",0)
-        .remove();
+    path_node_annotation_backings.exit().transition()
+    .duration(500)
+    .style("opacity",0)
+    .remove();
 
     path_node_annotations = g_path_node_annotations.selectAll(".path_node_annotation")
-        .data(host_info, function(d) { return d.host});
+    .data(host_info, function(d) { return d.host});
 
     path_node_annotations.enter().append("text")
-        .attr("x", function(d) { return annotation_x(d.host) + x_offset; })
-        .attr("y", function(d) { return annotation_y(d.host) + y_offset + 3; } )
-        .attr("class", "path_node_annotation")
-        .attr("text-anchor", "middle")
-        .attr("font-family", "helvetica")
-        .attr("background-color", "red")
+    .attr("x", function(d) { return annotation_x(d.host) + x_offset; })
+    .attr("y", function(d) { return annotation_y(d.host) + y_offset + 3; } )
+    .attr("class", "path_node_annotation")
+    .attr("text-anchor", "middle")
+    .attr("font-family", "helvetica")
+    .attr("background-color", "red")
         //.style("opacity", 1)
         .attr("font-size", 18)
 
@@ -1697,7 +1706,7 @@ function draw_path_node_annotations(data) {
         .attr("dy", icon_height + 3) // vertical-align: middle
         .text(node_annotation);
 
-    path_node_annotations.transition()
+        path_node_annotations.transition()
         .attr("x", function(d) { return annotation_x(d.host) + x_offset; })
         .attr("y", function(d) { return annotation_y(d.host) + y_offset + 3; })
         .duration(500)
@@ -1707,22 +1716,22 @@ function draw_path_node_annotations(data) {
         .style("opacity",0)
         .remove();
 
-}
+    }
 
-function redraw_paths() {
+    function redraw_paths() {
 
     //firstly append markers if necessary
     //TODO: split out into function
-    path_colors = _.map(pathinfo , function(elem){ return elem['color'];
-        }).filter(function(elem){
+    var path_colors = _.map(pathinfo , function(elem){ return elem['color'];
+}).filter(function(elem){
         return elem != null}); // filter out null elements
 
-    marker_names = _.map(path_colors , function(elem){
-        return "path_marker_" + elem; });
+var marker_names = _.map(path_colors , function(elem){
+    return "path_marker_" + elem; });
 
-    marker_names = ["path_marker_red", "path_marker_blue"];
+marker_names = ["path_marker_red", "path_marker_blue"];
 
-    chart.select("defs").selectAll("marker")
+chart.select("defs").selectAll("marker")
     .data(path_colors,  //append marker for this colour if not present
         function(d){ //index by marker name, rather than list position - allows appending later
             return d;})
@@ -1743,42 +1752,41 @@ function redraw_paths() {
 
 
     //tension offsets
-    path_groups = _.groupBy(pathinfo, function(d) {
+    var path_groups = _.groupBy(pathinfo, function(d) {
         return d['path']
     });
 
     var path_group_counts = {}; //stores the total
     var path_group_multiplier = {}; //decrement
-    for (key in path_groups) {
-        val = path_groups[key];
+    for (var key in path_groups) {
+        var val = path_groups[key];
         path_group_counts[key] = val.length;
         path_group_multiplier[key] = val.length;
     };
 
 //TODO: could scale the tension multiplier based on the number of co-incident paths rather than linear
-    for (index in pathinfo) {
-        data = pathinfo[index];
-        path = data['path']; //the elements eg [r1, r2, r5]
-        coincident_paths = path_group_counts[path];
-        coincident_index = path_group_multiplier[path];
+for (var index in pathinfo) {
+    var data = pathinfo[index];
+        var path = data['path']; //the elements eg [r1, r2, r5]
+        var coincident_paths = path_group_counts[path];
+        var coincident_index = path_group_multiplier[path];
         //decrement the multiplier for next time
         path_group_multiplier[path]--;
-        tension_multiplier = coincident_index/coincident_paths;
-        console.log(coincident_index/coincident_paths, tension_multiplier);
+        var tension_multiplier = coincident_index/coincident_paths;
         data['tension_multiplier'] = tension_multiplier; //normalised to between [0,1]
     }
 
     //animation based on http://bl.ocks.org/duopixel/4063326
     var svg_line = d3.svg.line()
-        .x(path_x)
-        .y(path_y)
-        .interpolate("cardinal")
+    .x(path_x)
+    .y(path_y)
+    .interpolate("cardinal")
 
-    trace_path = g_traces.selectAll(".trace_path")
-        .data(pathinfo, function(path) {
-            if ("id" in path) {
-                return path['id'];
-            }
+    var trace_path = g_traces.selectAll(".trace_path")
+    .data(pathinfo, function(path) {
+        if ("id" in path) {
+            return path['id'];
+        }
 
             return path['path']; //index by entire path contents
 
@@ -1859,26 +1867,27 @@ function redraw_paths() {
         .duration(1)
 
         trace_path
-          .on("mouseover", function(d){
+        .on("mouseover", function(d){
             draw_path_node_annotations(d);
             d3.select(this).style("stroke", "red");
             d3.select(this).style("stroke-width", "4");
             //path_info(d);
         })
-    .on("mouseout", function(){
-        d3.select(this).style("stroke-width", 7);
-        d3.select(this).style("stroke", get_path_color);
-        draw_path_node_annotations({'host_info': []});
+        .on("mouseout", function(){
+            d3.select(this).style("stroke-width", 7);
+            d3.select(this).style("stroke", get_path_color);
+            draw_path_node_annotations({'host_info': []});
         //clear_label();
     })
 
 
-    trace_path.exit().transition()
-    .duration(1000)
-    .style("opacity",0)
-    .remove();
+        trace_path.exit().transition()
+        .duration(1000)
+        .style("opacity",0)
+        .remove();
 
     //TODO: check this clear doesn't break anything - or can we pass pathinfo in locally each time? ie as param rather than ugly global?
     pathinfo = [];
 
+}
 }

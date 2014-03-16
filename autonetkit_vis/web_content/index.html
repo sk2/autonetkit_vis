@@ -72,19 +72,7 @@ var overlay_id = "phy";
 var display_interfaces = false;
 //var display_interfaces = true;
 
-var overlay_dropdown = d3.select("#overlay_select")
-.attr("title", "Overlay graph")
-.on("change", function() {
-    overlay_id = this.value;
-    if (overlay_id == "ip_allocations") {
-        ws.send("ip_allocations");
-    }
-    else {
-        ws.send("overlay_id=" + overlay_id);
-    }
-update_title();
-clear_graph_history();
-});
+
 
 var revision_dropdown = d3.select("#revision_select")
 .attr("title", "Revision")
@@ -93,7 +81,6 @@ var revision_dropdown = d3.select("#revision_select")
     revision_id = this.value;
     load_revision();
     redraw(); //TODO: remove this once using websocket callback for next line
-    //ws.send("overlay_id=" + overlay_id); //TODO: call server for history
     });
 
 $('#revision_select').hide();
@@ -189,6 +176,21 @@ function toggle_visibility(id) {
     }
 </script>
 <script type="text/javascript" src="ank_render.js"></script>
+
+      <script type="text/javascript">
+render_topology(chart);
+
+
+var overlay_dropdown = d3.select("#overlay_select")
+.attr("title", "Overlay graph")
+.on("change", function() {
+    overlay_id = this.value;
+    ws.send("overlay_id=" + overlay_id);
+    update_title(overlay_id, revision_id);
+    clear_graph_history();
+});
+
+</script>
 
     </div>
   </body>

@@ -1,6 +1,7 @@
 MANIFEST.in
 setup.py
 autonetkit_vis/__init__.py
+autonetkit_vis/notebook.py
 autonetkit_vis.egg-info/PKG-INFO
 autonetkit_vis.egg-info/SOURCES.txt
 autonetkit_vis.egg-info/dependency_links.txt
@@ -34,14 +35,8 @@ autonetkit_vis/web_content/font/fontawesome-webfont.eot
 autonetkit_vis/web_content/font/fontawesome-webfont.ttf
 autonetkit_vis/web_content/font/fontawesome-webfont.woff
 autonetkit_vis/web_content/icons/.DS_Store
-autonetkit_vis/web_content/icons/collision_domain.svg
 autonetkit_vis/web_content/icons/router.svg
 autonetkit_vis/web_content/icons/router_CSR1000v.svg
-autonetkit_vis/web_content/icons/router_titanium.svg
-autonetkit_vis/web_content/icons/router_vios.svg
-autonetkit_vis/web_content/icons/router_xrvr.svg
 autonetkit_vis/web_content/icons/server.svg
-autonetkit_vis/web_content/icons/server_FLAT.svg
-autonetkit_vis/web_content/icons/server_SNAT.svg
 autonetkit_vis/web_content/icons/server_server.svg
 autonetkit_vis/web_content/icons/switch.svg
