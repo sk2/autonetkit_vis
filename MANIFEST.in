@@ -1,1 +1,1 @@
-recursive-include autonetkit_vis/web_content/ *
+recursive-include autonetkit_vis/web_content *
