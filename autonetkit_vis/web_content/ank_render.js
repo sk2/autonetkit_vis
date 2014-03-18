@@ -652,7 +652,7 @@ var data_to_li = function(d, depth) {
 //TODO: make recursive, if type is object and not null then call, and repeat...
 var node_info = function(d) {
     //TODO: append ul/li like table example on http://christopheviau.com/d3_tutorial/
-    var text = d.id;
+    var text = d.label;
     text += data_to_li(d, 0);
     text = "<b>Node</b>: " + text;
     return text;
@@ -1613,12 +1613,12 @@ function redraw() {
         .attr("y", function(d) { return d.y + y_offset + 3; } )
         .attr("class", "device_label")
         .style("opacity", icon_opacity)
-        .attr("font-size", 16)
+        //.attr("font-size", 16)
 
         //TODO: use a general accessor for x/y of nodes
         device_labels
         .attr("dx", icon_width/2) // padding-right
-        .attr("dy", icon_height + 3) // vertical-align: middle
+        .attr("dy", icon_height + 4) // vertical-align: middle
         .text(device_label);
 
         device_labels.transition()
@@ -1868,8 +1868,8 @@ for (var index in pathinfo) {
         trace_path
         .on("mouseover", function(d){
             draw_path_node_annotations(d);
-            d3.select(this).style("stroke", "red");
-            d3.select(this).style("stroke-width", "4");
+            d3.select(this).style("stroke", "orange");
+            d3.select(this).style("stroke", get_path_color + 4);
             //path_info(d);
         })
         .on("mouseout", function(){

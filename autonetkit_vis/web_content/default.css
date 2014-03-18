@@ -127,7 +127,7 @@ path.link {
 .device_label {
   text-anchor: middle;
   font-family: Gill Sans;
-  font-size: 16;
+  font-size: large;
   fill: #333;
 }
 
