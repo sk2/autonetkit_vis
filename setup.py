@@ -3,7 +3,7 @@ from setuptools import setup
 
 setup (
      name = "autonetkit_vis",
-     version = "0.1.3",
+     version = "0.1.4",
      description = 'Visualisation for AutoNetkit',
      long_description = 'Visualisation for AutoNetkit',
 
