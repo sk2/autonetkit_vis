@@ -121,7 +121,6 @@ ws.onmessage = function (evt) {
             propagate_revision_dropdown(graph_history, revision_id); //TODO: update this with revision from webserver
             ip_allocations = [];
             filtered_nodes= []; //reset filtering
-            redraw_ip_allocations();
             redraw();
         }
     }
@@ -154,7 +153,6 @@ ws.onmessage = function (evt) {
             jsondata.nodes = [];
             jsondata.links = [];
             redraw();
-            redraw_ip_allocations();
         }
     }
     else if("highlight" in data) {
@@ -219,111 +217,6 @@ var ip_node_info = function(d) {
         children += "(" + child.name + ", " + child.subnet + ") ";
     }
     return d.name + ": " + d.subnet + " children: " + children;
-}
-
-function redraw_ip_allocations() {
-    //adapated from http://mbostock.github.com/d3/talk/20111018/tree.html
-    var diagonal = d3.svg.diagonal()
-        // change x and y (for the left to right tree)
-        //.projection(function(d) { return [d.y + 100, d.x]; });
-        .projection(function(d) { return [d.y + 80, d.x]; });
-
-        var layout = d3.layout.tree().size([700,500]);
-
-        var nodes = layout.nodes(ip_allocations);
-        if (ip_allocations.length == 0) {
-        nodes = []; //otherwise have single root node always present
-    }
-
-    var node = g_nodes.selectAll("g.node")
-    .data(nodes, name)
-    node.enter().append("svg:g")
-    .attr("transform", function(d) { return "translate(" + (d.y + 80) + "," + d.x +  ")"; })
-
-    var nodeEnter = node.enter().append("svg:g")
-    .attr("class", "node")
-    .attr("transform", function(d) { return "translate(" + (d.y + 80) + "," + d.x +  ")"; });
-
-    nodeEnter.append("svg:circle")
-    .attr("class", "ip_node")
-    .attr("r", 1e-6)
-    .attr("fill", "steelblue")
-    .on("mouseover", function(d){
-        d3.select(this).style("fill", "orange");
-    })
-    .on("mouseout", function(){
-        d3.select(this).style("fill", "steelblue");
-    });
-
-    $('.ip_node').tipsy({
-        //based on http://bl.ocks.org/1373263
-        gravity: 'w',
-        html: true,
-        title: function() {
-            var d = this.__data__
-            return ip_node_info(d);
-        }
-    });
-
-
-    var nodeUpdate = node.transition()
-    .duration(500)
-    .attr("transform", function(d) { return "translate(" + (d.y + 80) + "," + d.x + ")"; });
-
-    //TODO: fix issue with node names
-
-    nodeUpdate.select("circle")
-    .attr("r", 6);
-    //TODO: map colour to node type: edge, collision domain, subnet, l3_device
-
-    // Add the dot at every node
-    var nodeExit = node.exit().transition()
-    .duration(500)
-    .attr("transform", function(d) { return "translate(" + (d.y + 80) + "," + d.x + ")"; })
-    .remove();
-
-    nodeExit.select("circle")
-    .attr("r", 1e-6);
-
-    nodeEnter.append("svg:text")
-    .attr("x", function(d) { return d.children || d._children ? -15 : 15; })
-    .attr("dy", ".3em")
-        .attr("text-anchor", function(d) { return d.children || d._children ? "end" : "start"; }) //left if children otherwise right
-        .attr("font-family", "helvetica")
-        .attr("font-size", 10)
-        .text(function(d) { return d.name; })
-        .style("fill-opacity", 1e-6);
-
-        nodeUpdate.select("text")
-        .text(function(d) { return d.name; })
-        .style("fill-opacity", 1);
-
-        nodeExit.select("text")
-        .style("fill-opacity", 1e-6);
-
-    // Update the links…
-    var link = g_links.selectAll("path.link")
-    .data(layout.links(nodes, name), function(d) { return d.target.id; });
-
-    // Enter any new links at the parent's previous position.
-    link.enter().insert("svg:path", "g")
-    .attr("class", "link")
-    .attr("d", diagonal)
-    .transition()
-    .duration(500)
-    .attr("d", diagonal);
-
-    // Transition links to their new position.
-    link.transition()
-    .duration(500)
-    .attr("d", diagonal);
-
-    // Transition exiting nodes to the parent's new position.
-    link.exit().transition()
-    .duration(500)
-    .attr("d", diagonal)
-    .style("opacity", 1e-6)
-    .remove();
 }
 
 var propagate_overlay_dropdown = function(d) {
@@ -450,12 +343,6 @@ var link_type = function(d) {
 var edge_id = function(d) {
     return d.edge_id;
 }
-
-
-
-
-
-
 
 //TODO: replace all 32 magic numbers with icon_offset
 var icon_offset = icon_width/2;
