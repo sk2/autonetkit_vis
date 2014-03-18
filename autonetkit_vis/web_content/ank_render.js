@@ -515,7 +515,10 @@ var data_to_li = function(d, depth) {
     //TODO: may want to limit recursion depth
     var max_depth = 1;
     var text = "<ul>"; //begin the unordered list
-    for (var attr in d) {
+    sorted_keys = Object.keys(d).sort();
+
+    for (var index in sorted_keys) {
+        attr = sorted_keys[index];
         if(_.isArray(d[attr])) {
             text += "<li><b>" + attr + ":</b> ";
             text += d[attr].join(", ");
