@@ -1,7 +1,7 @@
 body
 {
-  font-family:"Palatino Linotype", "Book Antiqua", Palatino, serif;
-  background-color: rgb(255, 255, 255);
+  font-family:"Gill Sans", sans-serif;
+  background-color: #eee;;
   color: #333;
 }
 
@@ -78,11 +78,16 @@ path.link {
 
 .navbar {
   position:absolute;
-  top: 10px;
+  padding: 5px;
+  top: 0;
+  left: 0;
   height: 30px;
-  width: 99%;
+  width: 100%;
   border-bottom: 1px solid #333;
   z-index: 5;
+  background-color: #445878;
+  vertical-align: bottom;
+  color: #ddd;
 }
 
 .node_filter {
@@ -96,14 +101,34 @@ path.link {
   width: 99%;
   height: 95%;
   z-index: -1;
+  background-color: #eee;
 }
 
 .chart_rect {
-  fill: rgb(255, 255, 255);
+  fill: #eee;
 }
 
 .size_box {
   display: none;
+}
+
+.attr_group {
+  fill: #445878;
+  stroke: #445878;
+  opacity: 0.3;
+}
+
+.link_edge {
+  stroke: #445878;
+  stroke-width: 1.5;
+
+}
+
+.device_label {
+  text-anchor: middle;
+  font-family: Gill Sans;
+  font-size: 16;
+  fill: #333;
 }
 
 

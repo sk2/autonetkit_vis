@@ -1220,6 +1220,7 @@ function redraw() {
         .range(colorbrewer.Spectral[range_group_size]);
     }
     var groupFill = function(d, i) { return fill(i); };
+    var groupFill = function(d, i) { return fill(i); };
 
     //TODO: make group path change/exit with node data
     var groupings = g_groupings.selectAll(".attr_group")
@@ -1228,11 +1229,11 @@ function redraw() {
     groupings.enter().insert("path")
     .attr("class", "attr_group")
     .attr("d", groupPath)
-    .style("fill", groupFill)
-    .style("stroke", groupFill)
+    //.style("fill", groupFill)
+    //.style("stroke", groupFill)
     .style("stroke-width", hull_stroke_width)
     .style("stroke-linejoin", "round")
-    .style("opacity", 0.4)
+    //.style("opacity", 0.4)
     .on("mouseover", function(d){
         group_info(d);
     })
@@ -1300,16 +1301,16 @@ function redraw() {
                     //return "path"+d.source+"_"+d.target;
                 //})
 .attr("d", graph_edge)
-.style("stroke-width", function() {
+//.style("stroke-width", function() {
             //TODO: use this stroke-width function on mouseout too
-            if (jsondata.directed) {
-                return 2;
-            }
-            return 2;
-        })
+            //if (jsondata.directed) {
+                //return 2;
+            //}
+            //return 2;
+        //})
     //.attr("marker-end", marker_end)
     //.style("stroke", "rgb(103,109,244)")
-    .style("stroke", "rgb(2,106 ,155)")
+    //.style("stroke", "rgb(2,106 ,155)")
         //.style("fill", "rgb(113,119,254)")
         .style("fill", "none")
 
@@ -1611,8 +1612,6 @@ function redraw() {
         .attr("x", function(d) { return d.x + x_offset; })
         .attr("y", function(d) { return d.y + y_offset + 3; } )
         .attr("class", "device_label")
-        .attr("text-anchor", "middle")
-        .attr("font-family", "helvetica")
         .style("opacity", icon_opacity)
         .attr("font-size", 16)
 
