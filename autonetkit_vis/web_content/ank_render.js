@@ -1,7 +1,9 @@
 //TODO: see if can use underscore.js for other operations, to simplify mapping, iterationl etc
 //List concat based on http://stackoverflow.com/questions/5080028
 //
+var ws = new WebSocket(socket_url);
 var graph_history = [];
+var revision_id = 0;
 
 var update_title = function(overlay_id, revision_id) {
     document.title = "AutoNetkit - " + overlay_id + " r" + revision_id;
@@ -31,7 +33,6 @@ var propagate_revision_dropdown = function(d, revision_id) {
     $("#revision_select option[value=" + revision_id + "]").attr("selected", "selected")
 }
 
-render_topology = function(chart) {
     //"use strict";
 
     var g_groupings = chart.append("svg:g")
@@ -76,8 +77,8 @@ var icon_height = 45;
 
 var jsondata;
 
-var ws = new WebSocket(socket_url);
 ws.onopen = function() {
+    console.log("open ws");
     ws.send("overlay_list");
     ws.send("overlay_id=" + overlay_id);
     $("#websocket_icon").html(' <i class="icon-circle " title="WebSocket Connected."></i>');
@@ -519,7 +520,7 @@ var data_to_li = function(d, depth) {
 
     for (var index in sorted_keys) {
         attr = sorted_keys[index];
-        if(_.isArray(d[attr])) {
+       if(_.isArray(d[attr])) {
             text += "<li><b>" + attr + ":</b> ";
             text += d[attr].join(", ");
         }
@@ -737,7 +738,6 @@ var link_label_y = function(d) {
 
 var node_attr_groups;
 var edge_attr_groups;
-var revision_id = 0;
 
 var status_label = d3.select(".infobar").append("text")
 .attr("class", "status label")
@@ -1778,5 +1778,4 @@ for (var index in pathinfo) {
     //TODO: check this clear doesn't break anything - or can we pass pathinfo in locally each time? ie as param rather than ugly global?
     pathinfo = [];
 
-}
 }

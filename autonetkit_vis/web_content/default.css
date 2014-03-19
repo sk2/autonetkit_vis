@@ -116,12 +116,12 @@ path.link {
   fill: #445878;
   stroke: #445878;
   opacity: 0.3;
+  /* orange: #FF8C00 */
 }
 
 .link_edge {
   stroke: #445878;
   stroke-width: 1.5;
-
 }
 
 .device_label {
