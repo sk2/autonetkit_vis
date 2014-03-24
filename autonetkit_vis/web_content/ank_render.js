@@ -385,7 +385,6 @@ var interface_hypotenuse = (icon_width + icon_height)/2;
 
 var interface_x = function(d) {
 
-    }
 
     return directed_edge_offset_x(d.node, d.target, interface_hypotenuse, d.vis_index) - interface_width/2;
 
@@ -752,7 +751,6 @@ var directed_edge_offset_x = function(source, target, hypotenuse, vis_index) {
     }
 
     angle = Math.atan2( (t_x - s_x), (t_y - s_y));
-    angle = angle + alpha;
     angle = angle + alpha_local;
     offset_x = hypotenuse * Math.sin(angle);
     return s_x + offset_x;
@@ -911,6 +909,7 @@ var device_label = function(d) {
 var interface_label = function(d) {
     try {
         int_data = d.node._interfaces[d.interface];
+        int_data = d.node._ports[d.interface];
         return int_data[interface_label_id];
     }
     catch (err) {
@@ -1007,6 +1006,7 @@ var line_opacity = function(x) {
 // Store the attributes used for nodes and edges, to allow user to select
 var node_attributes = [];
 var edge_attributes = [];
+nodes = []
 
 function redraw() {
     //TODO: tidy this up, not all functions need to be in here, move out those that do, and only pass required params. also avoid repeated calculations.
@@ -1020,7 +1020,47 @@ function redraw() {
     });
 
     //TODO: add support for color for edge id edge_group_id
+    var link_group_id = function(d) {
+       return ([d.target, d.source]);
+    }
 
+    //allocate an index to parallel edges
+    links = jsondata.links;
+    var link_groups = _.groupBy(links, link_group_id );
+
+    //TODO: check how this works for parallel directed links!
+    //Want to put all inbound on one side, all outbound on other side
+
+    //for directed, put marker halfway?
+
+     var link_group_multiplier = {}; //stores the total
+     for (var key in link_groups) {
+
+       var val = link_groups[key];
+       link_group_multiplier[key] = val.length;
+
+       if (val.length %2 == 0) {
+        //if even number of links, don't put one in the middle
+        //acheive this by offset by one so none in zero position
+         link_group_multiplier[key] = val.length + 1;
+     }
+   };
+
+   for (var index in links){
+    var link = links[index];
+    multiplier_key = link_group_id(link);
+    var link_index = link_group_multiplier[multiplier_key];
+    link_group_multiplier[multiplier_key]--;
+    // want to map half to each side +1 indicates one side, -1 the other
+    // multiply by -1 to start at 0 rather than -0
+    if (jsondata.directed == true) {
+        mapped = link_index ;
+        //TODO: do exponential index for larger numbers
+    }
+     else {
+        mapped = -1 * Math.floor(link_index/2) * Math.pow(-1, link_index);
+     }
+    link.vis_index = mapped;
 
     //TODO: sort then make unique
     node_attributes.sort();
