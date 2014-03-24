@@ -1260,7 +1260,7 @@ function redraw() {
     .attr("class", "node_highlight")
     .attr("width", icon_width + 20 )
     .attr("height", icon_height + 20)
-    .style("stroke", "red")
+    .style("stroke", "#A22300")
     .style("stroke-width", 2)
     .style("fill", "none")
     .attr("x", function(d) { return d.x + x_offset - 20/2; })
@@ -1371,7 +1371,7 @@ function redraw() {
             link_info(d);
         })
         .on("mouseout", function(){
-            d3.select(this).style("stroke-width", "2");
+            //d3.select(this).style("stroke-width", "2");
         //d3.select(this).style("stroke", "rgb(103,109,244)");
         d3.select(this).style("stroke", "rgb(2,106 ,155)");
         d3.select(this).style("fill", "none");
@@ -1411,7 +1411,7 @@ function redraw() {
             if ("color" in d) {
                 return d['color'];
             }
-            return "red"; //default
+            return "#A22300"; //default
         }
 
         var highlight_edge_width = function(d) {
@@ -1562,6 +1562,8 @@ function redraw() {
     .attr("y", link_label_y )
     .attr("class", "link_label")
     .attr("text-anchor", "middle")
+    .attr("vertical-align", "middle")
+    .attr("text-align", "center")
     .attr("font-family", "helvetica")
     .attr("font-size", "small")
 
