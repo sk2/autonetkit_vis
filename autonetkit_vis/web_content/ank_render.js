@@ -1357,12 +1357,17 @@ function redraw() {
     //.style("stroke", "rgb(2,106 ,155)")
         //.style("fill", "rgb(113,119,254)")
         .style("fill", "none")
-
+        .attr("marker-mid", function(d) {
+            if (jsondata.directed == true) {
+                return "url(#mid_marker)";
+            }
+            return ""; //no marker for undirected
+        })
         .on("mouseover", function(d){
             d3.select(this).style("stroke", "orange");
             d3.select(this).style("fill", "none");
-            d3.select(this).style("stroke-width", "2");
-            d3.select(this).attr("marker-end", "");
+            //d3.select(this).style("stroke-width", "2");
+            //d3.select(this).attr("marker-end", "");
             link_info(d);
         })
         .on("mouseout", function(){
