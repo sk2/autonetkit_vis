@@ -8,3 +8,8 @@ autonetkit_vis.sublime-workspace
 autonetkit_vis.egg-info/PKG-INFO
 
 autonetkit_vis.egg-info/SOURCES.txt
+
+autonetkit_vis.egg-info/SOURCES.txt
+
+build/*
+dist/*
