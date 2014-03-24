@@ -1336,26 +1336,10 @@ function redraw() {
     .data(jsondata.links,
         function(d) { return d.source + "_" +  d.target + "_" + d.vis_index})
 
-        //line.enter().append("line")
         line.enter().append("svg:path")
         .attr("class", "link_edge")
         .style("opacity", line_opacity)
-        //.attr("id",
-                //function(d) {
-                    //return "path"+d.source+"_"+d.target;
-                //})
-.attr("d", graph_edge)
-//.style("stroke-width", function() {
-            //TODO: use this stroke-width function on mouseout too
-            //if (jsondata.directed) {
-                //return 2;
-            //}
-            //return 2;
-        //})
-    //.attr("marker-end", marker_end)
-    //.style("stroke", "rgb(103,109,244)")
-    //.style("stroke", "rgb(2,106 ,155)")
-        //.style("fill", "rgb(113,119,254)")
+        .attr("d", graph_edge)
         .style("fill", "none")
         .attr("marker-mid", function(d) {
             if (jsondata.directed == true) {
