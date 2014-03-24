@@ -38,6 +38,9 @@ var propagate_revision_dropdown = function(d, revision_id) {
     var g_groupings = chart.append("svg:g")
     .attr("id", "g_groupings");
 
+    var g_link_arrows = chart.append("svg:g")
+    .attr("id", "g_link_arrows");
+
     var g_links = chart.append("svg:g")
     .attr("id", "g_links");
 
@@ -389,6 +392,8 @@ var interface_x = function(d) {
         return directed_edge_offset_x(d.node, d.target, interface_hypotenuse) - interface_width/2;
     }
 
+    return directed_edge_offset_x(d.node, d.target, interface_hypotenuse, d.vis_index) - interface_width/2;
+
     angle = interface_angle(d);
     offset_x = interface_hypotenuse * Math.sin(angle);
     return node_x(d.node) + offset_x - interface_width/2;
@@ -396,9 +401,8 @@ var interface_x = function(d) {
 
 var interface_y = function(d) {
 
-    if (jsondata.directed) {
-        return directed_edge_offset_y(d.node, d.target, interface_hypotenuse) - interface_height/2;
     }
+    return directed_edge_offset_y(d.node, d.target, interface_hypotenuse, d.vis_index) - interface_height/2;
 
     angle = interface_angle(d);
     offset_y =interface_hypotenuse * Math.cos(angle);
@@ -608,8 +612,28 @@ chart.select("defs").selectAll("marker")
 .append("svg:path")
 .attr("d", "M0,0 V4 L2,2 Z");
 
+chart.select("defs").selectAll("marker")
+.data(["mid_marker"],
+    function(d){ //index by marker name, rather than list position - allows appending later
+        return d;})
+.enter().append("svg:marker")
+.attr("id", String)
+.attr("refX", 2)
+.attr("refY", 2)
+.attr("fill", "rgb(25,52,65)")
+.attr("stroke", "rgb(25,52,65)")
+.attr("markerWidth", 35)
+.attr("markerHeight", 35)
+.attr("viewBox", "0 0 12 10")
+.attr("markerUnits", "strokeWidth")
+.attr("orient", "auto")
+.append("svg:path")
+.attr("d", "M0,0 V4 L2,2 Z");
+
+//TODO: also have a highlight marker for when hover
 
 var marker_end  = function(d) {
+
     if (jsondata.directed) {
         return "url(#path_marker)";
     }
@@ -621,6 +645,42 @@ var offsetScale = 0.15; /* percentage of line line to offset curves */
 var radius = 20;
 
 var alpha = 0.2;
+
+var link_midpoint = function(d) {
+    //TODO: work out if this is inaccurate, or if curve doesnt in fact hit midpoint
+    var source_x = nodes[d.source].x + x_offset + icon_width/2;
+    source_y =  nodes[d.source].y + y_offset + icon_height/2;
+    target_x =  nodes[d.target].x + x_offset + icon_width/2;
+    target_y =  nodes[d.target].y + y_offset + icon_height/2;
+
+    var alpha_local = alpha * d.vis_index;;
+
+    var dx = target_x - source_x,
+    dy = target_y - source_y,
+    dr = Math.sqrt(dx * dx + dy * dy);
+    //dr = 1.2 * dr;
+    //return "M" + source_x + "," + source_y + "A" + dr + "," + dr + " 0 0,1 " + target_x + "," + target_y;
+
+
+    dr = dr/2 //want to place point halfway
+
+    angle = Math.atan2( (target_x - source_x), (target_y - source_y));
+    angle = angle + alpha_local;
+    h2 = dr / Math.cos(alpha_local);
+    offset_x = h2 * Math.sin(angle);
+    offset_y = h2 * Math.cos(angle);
+
+    console.log("here", source_x + offset_x, source_y + offset_y);
+
+    return ([source_x + offset_x, source_y + offset_y]);
+}
+
+var link_midpoint_x = function(d){
+    return link_midpoint(d)[0];
+}
+var link_midpoint_y = function(d){
+    return link_midpoint(d)[1];
+}
 
 var graph_edge = function(d) {
     var source_x = nodes[d.source].x + x_offset + icon_width/2;
@@ -636,12 +696,18 @@ var graph_edge = function(d) {
         //return "M" + source_x + "," + source_y + "A" + dr + "," + dr + " 0 0,1 " + target_x + "," + target_y;
         var points = [];
         points.push([source_x, source_y]);
+    var alpha_local = alpha * d.vis_index;;
 
-        dr = dr/2; //want to place point halfway
+    var dx = target_x - source_x,
+    dy = target_y - source_y,
+    dr = Math.sqrt(dx * dx + dy * dy);
+    //dr = 1.2 * dr;
+    //return "M" + source_x + "," + source_y + "A" + dr + "," + dr + " 0 0,1 " + target_x + "," + target_y;
 
 
-        //TODO: experiment with alpha being based on node distance
         //alpha = alpha + alpha * dr/8000;
+    var points = [];
+    points.push([source_x, source_y]);
 
         angle = Math.atan2( (target_x - source_x), (target_y - source_y));
         angle = angle + alpha;
@@ -656,10 +722,45 @@ var graph_edge = function(d) {
     } else {
         //TODO: look at join for here
         return  "M" + source_x + "," + source_y + "L" + target_x + "," + target_y;
+    //TODO: experiment with alpha_local being based on node distance
+    //alpha_local = alpha_local + alpha_local * dr/8000;
+
+    angle = Math.atan2( (target_x - source_x), (target_y - source_y));
+    angle = angle + alpha_local;
+    h2 = dr / Math.cos(alpha_local);
+    offset_x = h2 * Math.sin(angle);
+    offset_y = h2 * Math.cos(angle);
+
+    points.push([source_x + offset_x, source_y + offset_y]);
+
+    points.push([target_x, target_y]);
+    basis_method = "basis";
+    if (jsondata.directed == true) {
+        //basis_method = "cardinal";
     }
+
+    var d3LineBasis = d3.svg.line().interpolate(basis_method);
+    return d3LineBasis(points) ;
+
+}
+
+var link_angle = function(d) {
+    source = nodes[d.source];
+    target = nodes[d.target];
+    vis_index = d.vis_index;
+
+    s_x = node_x(source);
+    s_y = node_y(source);
+    t_x = node_x(target);
+    t_y = node_y(target);
+    var alpha_local = alpha * vis_index;
+
+    angle = Math.atan2( (t_x - s_x), (t_y - s_y));
+    return angle;
 }
 
 var directed_edge_offset_x = function(source, target, hypotenuse) {
+var directed_edge_offset_x = function(source, target, hypotenuse, vis_index) {
     //multiplier is how far out to return, ie the hypotenuse. Used as don't want interfaces co-incident with link labels
     //TODO: want interfaces to be fixed distance out, regardless of dr
 
@@ -667,26 +768,32 @@ var directed_edge_offset_x = function(source, target, hypotenuse) {
     s_y = node_y(source);
     t_x = node_x(target);
     t_y = node_y(target);
+    var alpha_local = alpha * vis_index;;
 
     dx = t_x - s_x;
     dy = t_y - s_y;
     dr = Math.sqrt(dx * dx + dy * dy);
 
     hypotenuse = typeof hypotenuse !== 'undefined' ? hypotenuse : dr/4; //defaults to dr/4
+    if (hypotenuse == null) {
+        hypotenuse = dr/2.5;
+    }
 
     angle = Math.atan2( (t_x - s_x), (t_y - s_y));
     angle = angle + alpha;
+    angle = angle + alpha_local;
     offset_x = hypotenuse * Math.sin(angle);
     return s_x + offset_x;
 }
 
-var directed_edge_offset_y = function(source, target, hypotenuse) {
-    //multiplier is how far out to return, ie the hypotenuse. Used as don't want interfaces co-incident with link labels
+var directed_edge_offset_y = function(source, target, hypotenuse, vis_index) {
+    //multiplier is how far out to return, ie th.e hypotenuse. Used as don't want interfaces co-incident with link labels
 
     s_x = node_x(source);
     s_y = node_y(source);
     t_x = node_x(target);
     t_y = node_y(target);
+    var alpha_local = alpha * vis_index;;
 
     dx = t_x - s_x;
     dy = t_y - s_y;
@@ -695,44 +802,22 @@ var directed_edge_offset_y = function(source, target, hypotenuse) {
     hypotenuse = typeof hypotenuse !== 'undefined' ? hypotenuse : dr/4; //defaults to dr/4
 
     angle = Math.atan2( (t_x - s_x), (t_y - s_y));
-    angle = angle + alpha;
+    angle = angle + alpha_local;
     offset_y = hypotenuse * Math.cos(angle);
     return s_y + offset_y;
 }
 
 var link_label_x = function(d) {
-
-    var source_x = nodes[d.source].x + x_offset + icon_width/2;
-    source_y =  nodes[d.source].y + y_offset + icon_height/2;
-    target_x =  nodes[d.target].x + x_offset + icon_width/2;
-    target_y =  nodes[d.target].y + y_offset + icon_height/2;
-    //TODO: update undirected case to use node_x and node_y
-    //
-    if (jsondata.directed) {
-        source = nodes[d.source];
-        target = nodes[d.target];
-        return directed_edge_offset_x(source, target);
-    } else {
-        var source_x = nodes[d.source].x + x_offset + icon_width/2;
-        target_x =  nodes[d.target].x + x_offset + icon_width/2;
-        return (source_x + target_x) /2;
-    }
+    source = nodes[d.source];
+    target = nodes[d.target];
+    return directed_edge_offset_x(source, target, null, d.vis_index);
 }
 
 var link_label_y = function(d) {
 
-    var source = nodes[d.source];
-    var target = nodes[d.target];
-
-    if (jsondata.directed) {
-        source = nodes[d.source];
-        target = nodes[d.target];
-        return directed_edge_offset_y(source, target);
-    }  else {
-        source_y =  nodes[d.source].y + y_offset + icon_height/2;
-        target_y =  nodes[d.target].y + y_offset + icon_height/2;
-        return (source_y + target_y) /2;
-    }
+    source = nodes[d.source];
+    target = nodes[d.target];
+    return directed_edge_offset_y(source, target, null, d.vis_index);
 }
 
 
@@ -1178,6 +1263,60 @@ function redraw() {
     .remove();
 
 
+    var link_arrows = g_link_arrows.selectAll(".link_arrow")
+    .data(jsondata.links,
+        function(d) { return d.source + "_" +  d.target + "_" + d.vis_index})
+
+    var link_arrow_path = function(d) {
+        //TODO: see if can just map x,y of polygons like for rect?
+        x = link_label_x(d);
+        y = link_label_y(d);
+
+        midpoint = link_midpoint(d);
+        x = midpoint[0];
+        y = midpoint[1];
+        //return "M20,20 V4 L22,22 Z";
+        //return "M" + 2+x + "," + 2+y + " V" + 420,20 V24 L22,22 Z";
+        w = 20;
+        h = 20;
+
+
+        retval = (x) + "," + (y);
+        retval += " " + (x+w/2) + "," + (y +h);
+        retval += " " + (x+w) + "," + y;
+        return retval;
+
+    }
+
+
+//todo set color in css
+    //link_arrows.enter().append("svg:polygon")
+    //link_arrows.enter().append("svg:rect")
+    //.attr("class", "link_arrow")
+    //.attr("height", 10)
+    //.attr("width", 10)
+    //.attr("x", link_midpoint_x)
+    //.attr("y", link_midpoint_y)
+    //.style("opacity", line_opacity)
+    //.style("stroke", "rgb(2,106 ,155)")
+    //.style("fill", "rgb(113,119,254)")
+    //.attr("transfrm", function(d) {
+        ////-1 to rotate right direction
+        //var angle = -1*link_angle(d) * 180/Math.PI;
+        ////need to specify co-ords: svg rotate default is relative to origin
+        //co_ords = link_midpoint_x(d) + "," + link_midpoint_y(d);
+        //retval = "rotate(" + angle + " " + co_ords + ")";
+        //return retval;
+      //})
+//
+    //.attr("points", link_arrow_path);
+//
+    //link_arrows.exit().transition()
+    //.duration(1000)
+    //.style("opacity",0)
+    //.remove();
+
+
     var line = g_links.selectAll(".link_edge")
     .data(jsondata.links,
         function(d) { return d.source + "_" +  d.target})
@@ -1219,6 +1358,14 @@ function redraw() {
         //d3.select(this).attr("marker-end", marker_end);
         clear_label();
     })
+
+        line
+        .attr("marker-mid", function(d) {
+            if (jsondata.directed == true) {
+                return "url(#mid_marker)";
+            }
+            return ""; //no marker for undirected
+        })
 
         line.transition()
         .duration(500)
