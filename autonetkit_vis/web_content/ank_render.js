@@ -908,7 +908,6 @@ var device_label = function(d) {
 
 var interface_label = function(d) {
     try {
-        int_data = d.node._interfaces[d.interface];
         int_data = d.node._ports[d.interface];
         return int_data[interface_label_id];
     }
@@ -1061,6 +1060,7 @@ function redraw() {
         mapped = -1 * Math.floor(link_index/2) * Math.pow(-1, link_index);
      }
     link.vis_index = mapped;
+   }
 
     //TODO: sort then make unique
     node_attributes.sort();
@@ -1075,7 +1075,7 @@ function redraw() {
     });
 
     // apply these to form
-    var skip_attributes = Array("_interfaces", "None", "id", "label", "x", "y");
+    var skip_attributes = Array("_ports", "None", "id", "label", "x", "y");
     var filtered_attributes = _.reject(node_attribute_unique_values, function(x){
         if (x[1].length == 1 && x[1][0] == null) return true; // don't display attributes that are only null
         if (x[1].length > 10) return true; // don't display attributes for long lists
@@ -1126,7 +1126,7 @@ function redraw() {
 
     //TODO: make this a memoized function to save computation
     interface_attributes = _.map(nodes, function(node) {
-        return _.map(node._interfaces, function(data){
+        return _.map(node._ports, function(data){
             return _.keys(data);
         });
     });
@@ -1143,7 +1143,7 @@ function redraw() {
     if (display_interfaces) {
         //Undirected, need to handle for both src and dst
         interface_data = _.map(jsondata.links, function(link) {
-            interface_data = link._interfaces;
+            interface_data = link._ports;
             src_node = nodes[link.source];
             dst_node = nodes[link.target];
             src_int_id = interface_data[src_node.id]; //interface id is indexed by the node id
@@ -1178,7 +1178,7 @@ function redraw() {
         interface_id = d.interface;
         asn = d.node['asn'];
         attr = interface_overlay_groupings[overlay_id];
-        area = d.node._interfaces[interface_id][attr];
+        area = d.node._ports[interface_id][attr];
         return asn + "," + area;
     }
 
@@ -1565,7 +1565,7 @@ function redraw() {
         .attr("dx", 0) // padding-right
         .attr("dy", 0) // vertical-align: middle
         .text(function (d) {
-            if (edge_group_id == "_interfaces") {
+            if (edge_group_id == "_ports") {
                 retval = "";
                 for (attr in d[edge_group_id]) {
                     retval += "(" + attr + ", " + d[edge_group_id][attr] + ")";
