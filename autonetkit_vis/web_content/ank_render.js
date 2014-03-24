@@ -522,7 +522,7 @@ var data_to_li = function(d, depth) {
             text += "<li><b>" + attr + ":</b> ";
             text += d[attr].join(", ");
         }
-        else if (attr == "_interfaces") {
+        else if (attr == "_ports") {
             //text += "<li><b>Interfaces: </b> ";
             //text += _.keys(d[attr]).join(", ");
         }
@@ -559,7 +559,7 @@ var link_info = function(d) {
 
     for (var attr in d) {
         //TODO use list membership test here instead
-        if (d[attr] != null && d[attr] != "None" && attr != "source" & attr != "target" && attr != "_interfaces" && attr != "edge_id") {
+        if (d[attr] != null && d[attr] != "None" && attr != "source" & attr != "target" && attr != "_ports" && attr != "vis_index") {
             text += ", " + attr + ": " + d[attr];
         }
     }
@@ -569,7 +569,7 @@ var link_info = function(d) {
 }
 
 var interface_info = function(d) {
-    int_data = d.node._interfaces[d.interface];
+    int_data = d.node._ports[d.interface];
 
     text = "<ul>"; //begin the unordered list
     text += "<li><b>node:</b> " + d.node.id + "</li>"; //add the key/val
@@ -634,8 +634,6 @@ var marker_end  = function(d) {
     return "";
 }
 
-var d3LineBasis = d3.svg.line().interpolate("basis");
-var offsetScale = 0.15; /* percentage of line line to offset curves */
 var radius = 20;
 
 var alpha = 0.2;
@@ -682,14 +680,6 @@ var graph_edge = function(d) {
     target_x =  nodes[d.target].x + x_offset + icon_width/2;
     target_y =  nodes[d.target].y + y_offset + icon_height/2;
 
-    if (jsondata.directed) {
-        var dx = target_x - source_x,
-        dy = target_y - source_y,
-        dr = Math.sqrt(dx * dx + dy * dy);
-        //dr = 1.2 * dr;
-        //return "M" + source_x + "," + source_y + "A" + dr + "," + dr + " 0 0,1 " + target_x + "," + target_y;
-        var points = [];
-        points.push([source_x, source_y]);
     var alpha_local = alpha * d.vis_index;;
 
     var dx = target_x - source_x,
@@ -699,23 +689,12 @@ var graph_edge = function(d) {
     //return "M" + source_x + "," + source_y + "A" + dr + "," + dr + " 0 0,1 " + target_x + "," + target_y;
 
 
-        //alpha = alpha + alpha * dr/8000;
     var points = [];
     points.push([source_x, source_y]);
 
-        angle = Math.atan2( (target_x - source_x), (target_y - source_y));
-        angle = angle + alpha;
-        h2 = dr / Math.cos(alpha);
-        offset_x = h2 * Math.sin(angle);
-        offset_y = h2 * Math.cos(angle);
+    dr = dr/2; //want to place point halfway
 
-        points.push([source_x + offset_x, source_y + offset_y]);
 
-        points.push([target_x, target_y]);
-        return d3LineBasis(points) ;
-    } else {
-        //TODO: look at join for here
-        return  "M" + source_x + "," + source_y + "L" + target_x + "," + target_y;
     //TODO: experiment with alpha_local being based on node distance
     //alpha_local = alpha_local + alpha_local * dr/8000;
 
@@ -753,7 +732,6 @@ var link_angle = function(d) {
     return angle;
 }
 
-var directed_edge_offset_x = function(source, target, hypotenuse) {
 var directed_edge_offset_x = function(source, target, hypotenuse, vis_index) {
     //multiplier is how far out to return, ie the hypotenuse. Used as don't want interfaces co-incident with link labels
     //TODO: want interfaces to be fixed distance out, regardless of dr
@@ -794,6 +772,10 @@ var directed_edge_offset_y = function(source, target, hypotenuse, vis_index) {
     dr = Math.sqrt(dx * dx + dy * dy);
 
     hypotenuse = typeof hypotenuse !== 'undefined' ? hypotenuse : dr/4; //defaults to dr/4
+    hypotenuse = hypotenuse !== 'null' ? hypotenuse : dr/4; //defaults to dr/4
+    if (hypotenuse == null) {
+        hypotenuse = dr/2.5;
+    }
 
     angle = Math.atan2( (t_x - s_x), (t_y - s_y));
     angle = angle + alpha_local;
@@ -808,7 +790,6 @@ var link_label_x = function(d) {
 }
 
 var link_label_y = function(d) {
-
     source = nodes[d.source];
     target = nodes[d.target];
     return directed_edge_offset_y(source, target, null, d.vis_index);
