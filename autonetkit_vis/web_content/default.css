@@ -132,3 +132,12 @@ path.link {
 }
 
 
+select {
+    border: 1px solid #000;
+       border: 1px solid #445878;
+       color: black;
+       width: 150px;
+       padding: 4px;
+       border-radius: 5px;
+       background-color: #eee;
+}
