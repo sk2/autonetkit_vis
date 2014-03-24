@@ -81,7 +81,6 @@ var icon_height = 45;
 var jsondata;
 
 ws.onopen = function() {
-    console.log("open ws");
     ws.send("overlay_list");
     ws.send("overlay_id=" + overlay_id);
     $("#websocket_icon").html(' <i class="icon-circle " title="WebSocket Connected."></i>');
@@ -114,7 +113,6 @@ var starting_hosts = [];
 
 ws.onmessage = function (evt) {
     var data = jQuery.parseJSON(evt.data);
-    console.log(data);
     //TODO: parse to see if valid traceroute path or other data
     if ("graph" in data) {
         if (overlay_id != "ip_allocations"){
@@ -163,7 +161,6 @@ ws.onmessage = function (evt) {
         apply_highlight(data['highlight']);
     }
     else {
-        console.log("Received unknown data", data);
         //TODO: work out why reaching here if passing the "graph in data" check above
     }
 }
@@ -388,8 +385,6 @@ var interface_hypotenuse = (icon_width + icon_height)/2;
 
 var interface_x = function(d) {
 
-    if (jsondata.directed) {
-        return directed_edge_offset_x(d.node, d.target, interface_hypotenuse) - interface_width/2;
     }
 
     return directed_edge_offset_x(d.node, d.target, interface_hypotenuse, d.vis_index) - interface_width/2;
@@ -401,7 +396,6 @@ var interface_x = function(d) {
 
 var interface_y = function(d) {
 
-    }
     return directed_edge_offset_y(d.node, d.target, interface_hypotenuse, d.vis_index) - interface_height/2;
 
     angle = interface_angle(d);
