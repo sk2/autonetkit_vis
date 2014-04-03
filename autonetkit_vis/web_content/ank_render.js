@@ -147,18 +147,6 @@ ws.onmessage = function (evt) {
 
         redraw();
     }
-    else if("lab started" in data) {
-        status_label.html("Lab started on: " + data['lab started']);
-    }
-    else if("ip_allocations" in data) {
-        ip_allocations = data['ip_allocations'];
-        if (overlay_id == "ip_allocations") {
-            //Only redraw if currently selected
-            jsondata.nodes = [];
-            jsondata.links = [];
-            redraw();
-        }
-    }
     else if("highlight" in data) {
         apply_highlight(data['highlight']);
     }
