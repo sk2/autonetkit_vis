@@ -183,22 +183,13 @@ var apply_highlight = function(data){
     if (data.paths.length > 0) {
         for (var index in data.paths) {
             var path = data.paths[index];
-}
             pathinfo.push(path);
         }
         redraw_paths();
     }
 }
 
-var ip_node_info = function(d) {
-    var children = "" ;
 
-    for (var index in d.children) {
-        child = d.children[index];
-        children += "(" + child.name + ", " + child.subnet + ") ";
-    }
-    return d.name + ": " + d.subnet + " children: " + children;
-}
 
 var propagate_overlay_dropdown = function(d) {
     $("#overlay_select").empty();
@@ -346,8 +337,16 @@ var edge_stroke_colors = d3.scale.ordinal();
 
 var edgeStroke = function(d, i) { return fill(d); };
 
+
+var interface_width = 15;
+var interface_height = 10;
+
+//how far out from icon centre to place interface
+var interface_hypotenuse = (icon_width + icon_height)/2;
+
 var interface_angle = function(d){
     //common to interface_x and interface_y
+    //TODO: need to update to handle parallel links
     s_x = node_x(d.node);
     s_y = node_y(d.node);
     t_x = node_x(d.target);
@@ -357,29 +356,12 @@ var interface_angle = function(d){
     return angle;
 }
 
-
-var interface_width = 15;
-var interface_height = 10;
-
-var interface_hypotenuse = (icon_width + icon_height)/2;
-
 var interface_x = function(d) {
-
-
-    return directed_edge_offset_x(d.node, d.target, interface_hypotenuse, d.vis_index) - interface_width/2;
-
-    angle = interface_angle(d);
-    offset_x = interface_hypotenuse * Math.sin(angle);
-    return node_x(d.node) + offset_x - interface_width/2;
+    return directed_edge_offset_x(d.node, d.target, interface_hypotenuse, d.link.vis_index) - interface_width/2;
 }
 
 var interface_y = function(d) {
-
-    return directed_edge_offset_y(d.node, d.target, interface_hypotenuse, d.vis_index) - interface_height/2;
-
-    angle = interface_angle(d);
-    offset_y =interface_hypotenuse * Math.cos(angle);
-    return node_y(d.node) + offset_y - interface_height/2;
+    return directed_edge_offset_y(d.node, d.target, interface_hypotenuse, d.link.vis_index) - interface_height/2;
 }
 
 var groupPath = function(d) {
@@ -497,7 +479,7 @@ var data_to_li = function(d, depth) {
 
     for (var index in sorted_keys) {
         attr = sorted_keys[index];
-       if(_.isArray(d[attr])) {
+        if(_.isArray(d[attr])) {
             text += "<li><b>" + attr + ":</b> ";
             text += d[attr].join(", ");
         }
@@ -641,8 +623,6 @@ var link_midpoint = function(d) {
     offset_x = h2 * Math.sin(angle);
     offset_y = h2 * Math.cos(angle);
 
-    console.log("here", source_x + offset_x, source_y + offset_y);
-
     return ([source_x + offset_x, source_y + offset_y]);
 }
 
@@ -659,7 +639,13 @@ var graph_edge = function(d) {
     target_x =  nodes[d.target].x + x_offset + icon_width/2;
     target_y =  nodes[d.target].y + y_offset + icon_height/2;
 
-    var alpha_local = alpha * d.vis_index;;
+    var vis_index = d.vis_index;
+    if (isNaN(vis_index)) {
+        //workaround for edge highlights for now
+        vis_index = 0;
+    }
+
+    var alpha_local = alpha * vis_index;
 
     var dx = target_x - source_x,
     dy = target_y - source_y,
@@ -775,7 +761,6 @@ var link_label_y = function(d) {
 
 
 var node_attr_groups;
-var edge_attr_groups;
 
 var status_label = d3.select(".infobar").append("text")
 .attr("class", "status label")
@@ -1079,6 +1064,11 @@ function redraw() {
     //redraw_highlights([], [])
 
     //TODO: tidy this up, not all functions need to be in here, move out those that do, and only pass required params. also avoid repeated calculations.
+    if (display_interfaces) {
+        $('#interface_label_select').show();
+    } else {
+        $('#interface_label_select').hide();
+    }
 
     nodes = jsondata.nodes;
 
@@ -1090,8 +1080,8 @@ function redraw() {
 
     //TODO: add support for color for edge id edge_group_id
     var link_group_id = function(d) {
-       return ([d.target, d.source]);
-    }
+     return ([d.target, d.source]);
+ }
 
     //allocate an index to parallel edges
     links = jsondata.links;
@@ -1150,7 +1140,6 @@ for (var index in links){
     var skip_attributes = Array("_ports", "None", "id", "label", "x", "y");
     var filtered_attributes = _.reject(node_attribute_unique_values, function(x){
         if (x[1].length == 1 && x[1][0] == null) return true; // don't display attributes that are only null
-        if (x[1].length > 10) return true; // don't display attributes for long lists
         return _.contains(skip_attributes, x[0]); //reject attributes in skip_attributes
     });
 
@@ -1179,7 +1168,6 @@ for (var index in links){
         //form += "<br>";
 
     });
-    //form += '<button onclick="javascript:applyNodeFilter();">Apply</button>';
     form += "</table>";
     form += '<input type="submit" name="submit" class="button" id="submit_btn" value="Apply" />  ';
     form += '</form>';
@@ -1214,40 +1202,30 @@ for (var index in links){
     propagate_interface_label_select(interface_attributes_unique);
 
     node_attr_groups = d3.nest().key( node_group_id ).entries(nodes);
-    edge_attr_groups = d3.nest().key(function(d) { return d[edge_group_id]; }).entries(jsondata.links);
     //TODO: use edge attr groups for edge colours
 
     //If undirected graph, then need two interfaces per edge: one at each end
     if (display_interfaces) {
         //Undirected, need to handle for both src and dst
-        interface_data = _.map(jsondata.links, function(link) {
+        interface_data = _.map(links, function(link) {
             interface_data = link._ports;
             src_node = nodes[link.source];
             dst_node = nodes[link.target];
             src_int_id = interface_data[src_node.id]; //interface id is indexed by the node id
             dst_int_id = interface_data[dst_node.id]; //interface id is indexed by the node id
-
-            //Check for null interace ids: some nodes may not have interfaces (eg a collision domain)
-
-            //TODO: if a directed link, only return for source
-            //
             retval = [];
             if (src_int_id != null) {
                 retval.push( { 'node': src_node, 'interface':  src_int_id, 'target': dst_node, 'link': link });
             }
 
             if (!jsondata.directed && dst_int_id != null) {
-                //undirected, also include data for other interface
                 retval.push( { 'node': dst_node, 'interface':  dst_int_id, 'target': src_node, 'link': link });
             }
-
             return retval;
-
         });
-
         interface_data = _.flatten(interface_data); //collapse from hierarchical nested structure
     } else {
-        var interface_data = {}; //reset
+        interface_data = {}; //reset
     }
 
 
@@ -1292,16 +1270,14 @@ for (var index in links){
 
     //TODO: make group path change/exit with node data
     var groupings = g_groupings.selectAll(".attr_group")
-    .data(node_attr_groups)
+    .data(node_attr_groups, function(d)
+        {return d.key})
 
     groupings.enter().insert("path")
     .attr("class", "attr_group")
     .attr("d", groupPath)
-    //.style("fill", groupFill)
-    //.style("stroke", groupFill)
     .style("stroke-width", hull_stroke_width)
     .style("stroke-linejoin", "round")
-    //.style("opacity", 0.4)
     .on("mouseover", function(d){
         group_info(d);
     })
@@ -1331,121 +1307,46 @@ for (var index in links){
 
     //TODO: filter the json data x and y ranges: store in nodes, and use this for the image plotting
 
-    var node_highlight = g_highlights.selectAll(".node_highlight")
-    .data(highlight_nodes, function(d) { return d.id;})
-
-    node_highlight.enter().append("svg:rect")
-    .attr("class", "node_highlight")
-    .attr("width", icon_width + 20 )
-    .attr("height", icon_height + 20)
-    .style("stroke", "#A22300")
-    .style("stroke-width", 2)
-    .style("fill", "none")
-    .attr("x", function(d) { return d.x + x_offset - 20/2; })
-    .attr("y", function(d) { return d.y + y_offset - 20/2; })
-    .style("opacity", 40)
-
-    node_highlight
-    .transition()
-    .style("opacity", 100)
-    .duration(500)
-
-    node_highlight.exit().transition()
-    .duration(1000)
-    .style("opacity",0)
-    .remove();
 
 
-    var link_arrows = g_link_arrows.selectAll(".link_arrow")
-    .data(jsondata.links,
-        function(d) { return d.source + "_" +  d.target + "_" + d.vis_index})
-
-    var link_arrow_path = function(d) {
-        //TODO: see if can just map x,y of polygons like for rect?
-        x = link_label_x(d);
-        y = link_label_y(d);
-
-        midpoint = link_midpoint(d);
-        x = midpoint[0];
-        y = midpoint[1];
-        //return "M20,20 V4 L22,22 Z";
-        //return "M" + 2+x + "," + 2+y + " V" + 420,20 V24 L22,22 Z";
-        w = 20;
-        h = 20;
-
-
-        retval = (x) + "," + (y);
-        retval += " " + (x+w/2) + "," + (y +h);
-        retval += " " + (x+w) + "," + y;
-        return retval;
-
+    //Store the data onto link to save lookups
+    for (index in jsondata.links) {
+        link = jsondata.links[index];
+        link.source_node_id = nodes[link.source].id;
+        link.target_node_id = nodes[link.target].id;
     }
 
-
-//todo set color in css
-    //link_arrows.enter().append("svg:polygon")
-    //link_arrows.enter().append("svg:rect")
-    //.attr("class", "link_arrow")
-    //.attr("height", 10)
-    //.attr("width", 10)
-    //.attr("x", link_midpoint_x)
-    //.attr("y", link_midpoint_y)
-    //.style("opacity", line_opacity)
-    //.style("stroke", "rgb(2,106 ,155)")
-    //.style("fill", "rgb(113,119,254)")
-    //.attr("transfrm", function(d) {
-        ////-1 to rotate right direction
-        //var angle = -1*link_angle(d) * 180/Math.PI;
-        ////need to specify co-ords: svg rotate default is relative to origin
-        //co_ords = link_midpoint_x(d) + "," + link_midpoint_y(d);
-        //retval = "rotate(" + angle + " " + co_ords + ")";
-        //return retval;
-      //})
-//
-    //.attr("points", link_arrow_path);
-//
-    //link_arrows.exit().transition()
-    //.duration(1000)
-    //.style("opacity",0)
-    //.remove();
-
-
     var line = g_links.selectAll(".link_edge")
-    .data(jsondata.links,
-        function(d) { return d.source + "_" +  d.target + "_" + d.vis_index})
+    .data(links,
+        function(d) { return d.source_node_id + "_" +  d.target_node_id + "_" + d.vis_index})
 
-        line.enter().append("svg:path")
-        .attr("class", "link_edge")
-        .style("opacity", line_opacity)
-        .attr("d", graph_edge)
-        .style("fill", "none")
-        .attr("marker-mid", function(d) {
-            if (jsondata.directed == true) {
-                return "url(#mid_marker)";
-            }
+    line.enter().append("svg:path")
+    .attr("class", "link_edge")
+    .style("opacity", line_opacity)
+    .attr("d", graph_edge)
+    .style("fill", "none")
+    .attr("marker-mid", function(d) {
+        if (jsondata.directed == true) {
+            return "url(#mid_marker)";
+        }
             return ""; //no marker for undirected
         })
-        .on("mouseover", function(d){
-            d3.select(this).style("stroke", "orange");
-            d3.select(this).style("fill", "none");
-            //d3.select(this).style("stroke-width", "2");
-            //d3.select(this).attr("marker-end", "");
+    .on("mouseover", function(d){
+        d3.select(this).style("stroke", "orange");
+        d3.select(this).style("fill", "none");
             link_info(d);
         })
-        .on("mouseout", function(){
-            //d3.select(this).style("stroke-width", "2");
-        //d3.select(this).style("stroke", "rgb(103,109,244)");
+    .on("mouseout", function(){
         d3.select(this).style("stroke", "rgb(2,106 ,155)");
         d3.select(this).style("fill", "none");
-        //d3.select(this).attr("marker-end", marker_end);
         clear_label();
     })
 
-        line
-        .attr("marker-mid", function(d) {
-            if (jsondata.directed == true) {
-                return "url(#mid_marker)";
-            }
+    line
+    .attr("marker-mid", function(d) {
+        if (jsondata.directed == true) {
+            return "url(#mid_marker)";
+        }
             return ""; //no marker for undirected
         })
 
@@ -1459,7 +1360,7 @@ for (var index in links){
     .style("opacity",0)
     .remove();
 
-        $('.link_edge').tipsy({
+    $('.link_edge').tipsy({
         //based on http://bl.ocks.org/1373263
         gravity: 'w',
         html: true,
@@ -1469,68 +1370,9 @@ for (var index in links){
         }
     });
 
-        var highlight_edge_color = function(d) {
-            if ("color" in d) {
-                return d['color'];
-            }
-            return "#A22300"; //default
-        }
 
-        var highlight_edge_width = function(d) {
-            if ("width" in d) {
-                return d['width'];
-            }
-                return 5; //default
-            }
-
-            var highlight_line = g_link_highlights.selectAll(".highlight_line")
-            .data(highlight_edges)
-
-        //line.enter().append("line")
-        highlight_line.enter().append("svg:path")
-        .attr("class", "highlight_line")
-        .attr("id",
-            function(d) {
-                return "path"+d.source+"_"+d.target;
-            })
-        .attr("d", graph_edge)
-        .style("stroke-width", highlight_edge_width)
-    //.attr("marker-end", marker_end)
-    .style("stroke", highlight_edge_color)
-        //.style("fill", "rgb(113,119,254)")
-        .style("fill", "none")
-
-        highlight_line.transition()
-        .duration(1000)
-        .attr("d", graph_edge)
-        .style("opacity", line_opacity)
-        .style("stroke", highlight_edge_color)
-        .style("stroke-width", highlight_edge_width)
-
-
-        highlight_line.exit().transition()
-        .duration(1000)
-        .style("opacity",0)
-        .remove();
-
-        var starting_circles = chart.selectAll(".starting_circle")
-        .data(starting_hosts, function(d) { return d.id;})
-
-        starting_circles.enter().append("svg:circle")
-        .attr("class", "starting_circle")
-        .attr("r", 30)
-        .style("opacity",40)
-        .attr("cx", function(d) { return d.x + x_offset + icon_width/2 ; })
-        .attr("cy", function(d) { return d.y + y_offset + icon_height/2; })
-
-        starting_circles.transition()
-        .attr("r", 60)
-        .style("opacity",0)
-        .duration(4000);
 
         var interface_icons = g_interfaces.selectAll(".interface_icon")
-        //.data(interface_data) //TODO: check if need to provide an index
-        //TODO: check if should return tuple of interface, node for uniqueness (esp for switching overlays)
         .data(interface_data, function(d) { return (d.node, d.interface);})
 
         var highlight_interfaces = function(d) {
@@ -1616,18 +1458,19 @@ for (var index in links){
         .remove();
 
     //Link labels
-    var link_labels = g_link_labels.selectAll(".link_label")
-    .data(jsondata.links, edge_id)
+    if (edge_group_id != "None") {
+        var link_labels = g_link_labels.selectAll(".link_label")
+        .data(links, edge_id)
 
-    link_labels.enter().append("text")
-    .attr("x",link_label_x)
-    .attr("y", link_label_y )
-    .attr("class", "link_label")
-    .attr("text-anchor", "middle")
-    .attr("vertical-align", "middle")
-    .attr("text-align", "center")
-    .attr("font-family", "helvetica")
-    .attr("font-size", "small")
+        link_labels.enter().append("text")
+        .attr("x",link_label_x)
+        .attr("y", link_label_y )
+        .attr("class", "link_label")
+        .attr("text-anchor", "middle")
+        .attr("vertical-align", "middle")
+        .attr("text-align", "center")
+        .attr("font-family", "helvetica")
+        .attr("font-size", "small")
 
         //TODO: use a general accessor for x/y of nodes
         link_labels
@@ -1695,7 +1538,6 @@ for (var index in links){
         .attr("height", icon_height)
         .on("mouseover", function(d){
             node_info(d);
-            //d3.select(this).attr("xlink:href", icon); //TODO: check why need to do this
         })
         .on("mouseout", function(){
             clear_label();
@@ -1753,8 +1595,6 @@ for (var index in links){
         .duration(1000 * transition_multiplier)
         .style("opacity",0)
         .remove();
-    //});
-
 
         //reset paths
         pathinfo = [];
@@ -1840,6 +1680,9 @@ function draw_path_node_annotations(data) {
     }
 
     function redraw_paths() {
+        if (pathinfo.length == 0) {
+            return;
+        }
 
     //firstly append markers if necessary
     //TODO: split out into function
@@ -1992,15 +1835,12 @@ for (var index in pathinfo) {
             draw_path_node_annotations(d);
             d3.select(this).style("stroke", "orange");
             d3.select(this).style("stroke", get_path_color + 4);
-            //path_info(d);
         })
         .on("mouseout", function(){
             d3.select(this).style("stroke-width", 7);
             d3.select(this).style("stroke", get_path_color);
             draw_path_node_annotations({'host_info': []});
-        //clear_label();
     })
-
 
         trace_path.exit().transition()
         .duration(1000 * transition_multiplier)
