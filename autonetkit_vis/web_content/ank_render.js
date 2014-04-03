@@ -1045,7 +1045,7 @@ function redraw() {
      }
    };
 
-   for (var index in links){
+for (var index in links){
     var link = links[index];
     multiplier_key = link_group_id(link);
     var link_index = link_group_multiplier[multiplier_key];
@@ -1056,11 +1056,13 @@ function redraw() {
         mapped = link_index ;
         //TODO: do exponential index for larger numbers
     }
-     else {
-        mapped = -1 * Math.floor(link_index/2) * Math.pow(-1, link_index);
-     }
+    else {
+        magnitude = Math.floor(link_index/2);
+        magnitude = Math.log(1 + magnitude);
+        mapped = -1 * magnitude * Math.pow(-1, link_index);
+    }
     link.vis_index = mapped;
-   }
+}
 
     //TODO: sort then make unique
     node_attributes.sort();
