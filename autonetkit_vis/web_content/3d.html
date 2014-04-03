@@ -163,7 +163,7 @@ var node_info = function(d) {
 
 			function build(jsondata, overlay_id, z_index) {
 				nodes_by_overlay[overlay_id] = jsondata.nodes;
-				var z_multiplier = 140;
+				var z_multiplier = 200;
 
 				nodes = jsondata.nodes;
 				all_x = _.map(nodes, function(n){ return n['x']});
@@ -387,6 +387,7 @@ ws.onmessage = function (evt) {
     else{
     	overlays = ['phy', 'ospf', 'ibgp_v4', 'ebgp', 'vrf', 'mpls_ldp'];
     	overlays = ['phy', 'ospf', 'ibgp_v4', 'ebgp'];
+    	overlays = ['phy', 'layer2', 'layer2_bc', 'layer3'];
 		for ( var i = 0; i < overlays.length; i ++ ) {
 			overlay_id = overlays[i];
 			z_index = i;
