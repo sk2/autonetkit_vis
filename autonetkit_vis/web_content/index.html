@@ -39,6 +39,7 @@
         |
 
          <input type="checkbox" id="display_interfaces" value="display_interfaces" />
+         <input type="checkbox" id="transition_multiplier" value="transition_multiplier" />
 
          |<select id = "node_label_select" width=10></select>
          <select id = "edge_group_select" width=10></select>
@@ -74,6 +75,7 @@ var overlay_id = "phy";
 //var overlay_id = "ospf";
 var display_interfaces = false;
 //var display_interfaces = true;
+var transition_multiplier = false;
 
 
 
@@ -91,8 +93,11 @@ $('#revision_select').hide();
 var node_filter_button = d3.select("#node_filter")
 .attr("title", "Node Filter")
 
-var display_interfaces_button = d3.select("#display_interfaces")
+d3.select("#display_interfaces")
 .attr("title", "Display Interfaces")
+
+d3.select("#transition_multiplier")
+.attr("title", "Animate Transitions")
 
 var node_label_select = d3.select("#node_label_select")
 .attr("title", "Node Label")
@@ -120,6 +125,16 @@ d3.select("#display_interfaces")
         display_interfaces = d3.select(this).property("checked");
         redraw();
         })
+
+      d3.select("#transition_multiplier")
+      .on("change", function() {
+      animate_transitions = d3.select(this).property("checked");
+      if(animate_transitions == true) {
+      transition_multiplier = 1;
+    } else {
+    transition_multiplier = 0;
+  }
+})
 
 var status_label = d3.select("navbar").append("text")
 .attr("class", "status label")

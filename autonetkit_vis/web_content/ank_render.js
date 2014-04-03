@@ -5,6 +5,8 @@ var ws = new WebSocket(socket_url);
 var graph_history = [];
 var revision_id = 0;
 
+var transition_multiplier = 0;
+
 var update_title = function(overlay_id, revision_id) {
     document.title = "AutoNetkit - " + overlay_id + " r" + revision_id;
 }
@@ -930,7 +932,7 @@ var zoom_fit = function() {
 
         zoom_box.transition()
         .attr("transform", "scale(" + p + ")")
-        .duration(500)
+        .duration(500 * transition_multiplier)
             //redraw();
         }
     }
@@ -1234,12 +1236,12 @@ for (var index in links){
     });
     ;
     groupings.transition()
-    .duration(500)
+    .duration(500 * transition_multiplier)
     .attr("d", groupPath)
     .style("stroke-width", hull_stroke_width)
 
     groupings.exit().transition()
-    .duration(1000)
+    .duration(500 * transition_multiplier)
     .style("opacity",0)
     .remove();
 
@@ -1373,15 +1375,15 @@ for (var index in links){
             return ""; //no marker for undirected
         })
 
-        line.transition()
-        .duration(500)
-        .attr("d", graph_edge)
-        .style("opacity", line_opacity)
+    line.transition()
+    .duration(500 * transition_multiplier)
+    .attr("d", graph_edge)
+    .style("opacity", line_opacity)
 
-        line.exit().transition()
-        .duration(1000)
-        .style("opacity",0)
-        .remove();
+    line.exit().transition()
+    .duration(1000 * transition_multiplier)
+    .style("opacity",0)
+    .remove();
 
         $('.link_edge').tipsy({
         //based on http://bl.ocks.org/1373263
@@ -1504,10 +1506,10 @@ for (var index in links){
         .attr("x", interface_x)
         .attr("y", interface_y)
         //.style("opacity", interface_opacity)
-        .duration(500);
+        .duration(500 * transition_multiplier);
 
         interface_icons.exit().transition()
-        .duration(500)
+        .duration(500 * transition_multiplier)
         //.style("opacity",0)
         .remove();
 
@@ -1532,10 +1534,10 @@ for (var index in links){
         interface_labels.transition()
         .attr("x", interface_x)
         .attr("y", interface_y)
-        .duration(500)
+        .duration(500 * transition_multiplier)
 
         interface_labels.exit().transition()
-        .duration(500)
+        .duration(500 * transition_multiplier)
         .style("opacity",0)
         .remove();
 
@@ -1571,12 +1573,13 @@ for (var index in links){
         link_labels.transition()
         .attr("x",link_label_x)
         .attr("y", link_label_y )
-        .duration(500)
+        .duration(500 * transition_multiplier)
 
         link_labels.exit().transition()
-        .duration(1000)
+        .duration(1000 * transition_multiplier)
         .style("opacity",0)
         .remove();
+    }
 
         var node_id = function(d) {
             return d.label + d.network;
@@ -1633,10 +1636,10 @@ for (var index in links){
         .style("opacity", icon_opacity)
         .attr("x", function(d) { return d.x + x_offset; })
         .attr("y", function(d) { return d.y + y_offset; })
-        .duration(500)
+        .duration(500 * transition_multiplier)
 
         image.exit().transition()
-        .duration(1000)
+        .duration(1000 * transition_multiplier)
         .style("opacity",0)
         .remove();
 
@@ -1670,10 +1673,10 @@ for (var index in links){
         .attr("x", function(d) { return d.x + x_offset; })
         .attr("y", function(d) { return d.y + y_offset + 3; })
         .style("opacity", icon_opacity)
-        .duration(500)
+        .duration(500 * transition_multiplier)
 
         device_labels.exit().transition()
-        .duration(1000)
+        .duration(1000 * transition_multiplier)
         .style("opacity",0)
         .remove();
     //});
@@ -1727,7 +1730,7 @@ function draw_path_node_annotations(data) {
     .style("opacity", 0.8)
 
     path_node_annotation_backings.exit().transition()
-    .duration(500)
+    .duration(500 * transition_multiplier)
     .style("opacity",0)
     .remove();
 
@@ -1753,10 +1756,10 @@ function draw_path_node_annotations(data) {
         path_node_annotations.transition()
         .attr("x", function(d) { return annotation_x(d.host) + x_offset; })
         .attr("y", function(d) { return annotation_y(d.host) + y_offset + 3; })
-        .duration(500)
+        .duration(500 * transition_multiplier)
 
         path_node_annotations.exit().transition()
-        .duration(500)
+        .duration(500 * transition_multiplier)
         .style("opacity",0)
         .remove();
 
@@ -1904,11 +1907,11 @@ for (var index in pathinfo) {
         .attr("d", function(d) { return svg_line.tension(path_tension(d))(d['path']); })
         .ease("linear")
         .attr("stroke-dashoffset", 0)
-        .duration(transition_time)
+        .duration(transition_time * transition_multiplier)
         .transition()
         .attr("stroke-dasharray", "0")
         .attr("marker-end", path_marker_end)
-        .duration(1)
+        .duration(1 * transition_multiplier)
 
         trace_path
         .on("mouseover", function(d){
@@ -1926,7 +1929,7 @@ for (var index in pathinfo) {
 
 
         trace_path.exit().transition()
-        .duration(1000)
+        .duration(1000 * transition_multiplier)
         .style("opacity",0)
         .remove();
 
