@@ -119,7 +119,7 @@ ws.onmessage = function (evt) {
     if ("graph" in data) {
         if (overlay_id != "ip_allocations"){
             jsondata = data;
-            graph_history.push(data);
+            //graph_history.push(data);
             update_title(overlay_id, revision_id);
             revision_id = graph_history.length - 1;
             propagate_revision_dropdown(graph_history, revision_id); //TODO: update this with revision from webserver
