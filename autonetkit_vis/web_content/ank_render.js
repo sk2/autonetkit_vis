@@ -825,15 +825,15 @@ $(document).keydown(function(e){
         history_back();
         break;
 
-        case 38: // up
-        break;
+        //case 38: // up
+        //break;
 
         case 39: // right
         history_forward();
         break;
 
-        case 40: // down
-        break;
+        //case 40: // down
+        //break;
 
         default: return; // exit this handler for other keys
     }
