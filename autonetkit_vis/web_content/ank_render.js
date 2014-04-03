@@ -1187,11 +1187,17 @@ for (var index in links){
     $(".node_filter").html(form);
 
     edge_attributes = []; //reset
-    jsondata.links.forEach(function(link) {
+    links.forEach(function(link) {
+        //TODO: why push to node_attributes?
         node_attributes.push.apply(edge_attributes, _.keys(link));
     });
     edge_attributes.sort();
     edge_attributes = _.uniq(edge_attributes);
+    var skip_attributes = Array("_ports", "None", "vis_index", "raw_interfaces");
+    var edge_attributes = _.reject(edge_attributes, function(x){
+        if (x[1].length == 1 && x[1][0] == null) return true; // don't display attributes that are only null
+        return _.contains(skip_attributes, x[0]); //reject attributes in skip_attributes
+    });
     propagate_edge_group_select(edge_attributes);
 
     var interface_attributes = [];
