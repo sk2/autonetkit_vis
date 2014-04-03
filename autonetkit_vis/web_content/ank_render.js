@@ -1105,15 +1105,15 @@ function redraw() {
      var link_group_multiplier = {}; //stores the total
      for (var key in link_groups) {
 
-       var val = link_groups[key];
-       link_group_multiplier[key] = val.length;
+         var val = link_groups[key];
+         link_group_multiplier[key] = val.length;
 
-       if (val.length %2 == 0) {
+         if (val.length %2 == 0) {
         //if even number of links, don't put one in the middle
         //acheive this by offset by one so none in zero position
-         link_group_multiplier[key] = val.length + 1;
-     }
-   };
+        link_group_multiplier[key] = val.length + 1;
+    }
+};
 
 for (var index in links){
     var link = links[index];
