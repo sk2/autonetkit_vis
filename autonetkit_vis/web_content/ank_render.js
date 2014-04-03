@@ -155,10 +155,9 @@ ws.onmessage = function (evt) {
     }
 }
 
-var highlight_nodes = [];
-var highlight_edges = [];
-
 var apply_highlight = function(data){
+    var highlight_nodes = [];
+    var highlight_edges = [];
 
     highlight_nodes = _.map(data['nodes'], function(n) {
         return nodes_by_id[n];
@@ -178,26 +177,17 @@ var apply_highlight = function(data){
     })
 
     if ((data.nodes.length > 0) || (data.edges.length > 0)) {
-        redraw();
+        redraw_highlights(highlight_nodes, highlight_edges);
     }
 
-
-    //draw paths after redraw -> z-ordering means overlayed
-    //pathinfo = []; //reset
     if (data.paths.length > 0) {
         for (var index in data.paths) {
             var path = data.paths[index];
-            //path_nodes = _.map(path, function(n) {
-                //return nodes_by_id[n];
-            //})
-pathinfo.push(path);
 }
-redraw_paths();
-}
-}
-
-var load_ip_allocations = function(d) {
-
+            pathinfo.push(path);
+        }
+        redraw_paths();
+    }
 }
 
 var ip_node_info = function(d) {
@@ -997,7 +987,97 @@ var node_attributes = [];
 var edge_attributes = [];
 nodes = []
 
+function redraw_highlights(highlight_nodes, highlight_edges) {
+    //TODO: try and minimise the calls to graph_edge
+    var node_highlight = g_highlights.selectAll(".node_highlight")
+    .data(highlight_nodes, function(d) { return d.id;})
+
+    node_highlight.enter().append("svg:rect")
+    .attr("class", "node_highlight")
+    .attr("width", icon_width + 20 )
+    .attr("height", icon_height + 20)
+    .style("stroke", "#A22300")
+    .style("stroke-width", 2)
+    .style("fill", "none")
+    .attr("x", function(d) { return d.x + x_offset - 20/2; })
+    .attr("y", function(d) { return d.y + y_offset - 20/2; })
+    .style("opacity", 40)
+
+    node_highlight
+    .transition()
+    .style("opacity", 100)
+    .duration(500 * transition_multiplier)
+
+    node_highlight.exit().transition()
+    .duration(1000 * transition_multiplier)
+    .style("opacity",0)
+    .remove();
+
+    var highlight_edge_color = function(d) {
+        if ("color" in d) {
+            return d['color'];
+        }
+            return "#A22300"; //default
+        }
+
+        var highlight_edge_width = function(d) {
+            if ("width" in d) {
+                return d['width'];
+            }
+                return 5; //default
+            }
+
+            var highlight_line = g_link_highlights.selectAll(".highlight_line")
+            .data(highlight_edges)
+
+        //line.enter().append("line")
+        highlight_line.enter().append("svg:path")
+        .attr("class", "highlight_line")
+        .attr("id",
+            function(d) {
+                return "path"+d.source+"_"+d.target;
+            })
+        .attr("d", function(d) {
+            res = graph_edge(d) ;
+            return res;
+        })
+        .style("stroke-width", highlight_edge_width)
+        .style("stroke", highlight_edge_color)
+        .style("fill", "none")
+
+        highlight_line.transition()
+        .duration(1000* transition_multiplier)
+        .attr("d", graph_edge)
+        .style("opacity", line_opacity)
+        .style("stroke", highlight_edge_color)
+        .style("stroke-width", highlight_edge_width)
+
+        highlight_line.exit().transition()
+        .duration(1000 * transition_multiplier)
+        .style("opacity",0)
+        .remove();
+
+        var starting_circles = chart.selectAll(".starting_circle")
+        .data(starting_hosts, function(d) { return d.id;})
+
+        starting_circles.enter().append("svg:circle")
+        .attr("class", "starting_circle")
+        .attr("r", 30)
+        .style("opacity",40)
+        .attr("cx", function(d) { return d.x + x_offset + icon_width/2 ; })
+        .attr("cy", function(d) { return d.y + y_offset + icon_height/2; })
+
+        starting_circles.transition()
+        .attr("r", 60)
+        .style("opacity",0)
+        .duration(4000 * transition_multiplier);
+
+    }
+
 function redraw() {
+    //clear highlights
+    //redraw_highlights([], [])
+
     //TODO: tidy this up, not all functions need to be in here, move out those that do, and only pass required params. also avoid repeated calculations.
 
     nodes = jsondata.nodes;
