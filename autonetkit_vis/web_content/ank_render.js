@@ -517,14 +517,19 @@ var link_info = function(d) {
     var source = nodes[d.source];
     var target = nodes[d.target];
     var text = source.id + " - " + target.id; //TODO: make sure all have labels from graphics appended overlay
+    text += "<ul>"; //finish the unordered list
 
     for (var attr in d) {
         //TODO use list membership test here instead
-        if (d[attr] != null && d[attr] != "None" && attr != "source" & attr != "target" && attr != "_ports" && attr != "vis_index") {
-            text += ", " + attr + ": " + d[attr];
+        if (d[attr] != null && d[attr] != "None" && attr != "source" & attr != "target" && attr != "_ports"
+            && attr != "source_node_id" && attr != "target_node_id" && attr != "vis_index") {
+            //text += ", " + attr + ": " + d[attr];
+            text += "<li><b>" + attr + ":</b> " + d[attr] + "</li>"; //add the key/val
         }
     }
-    text = "Link: " + text;
+    //text = "Link: " + "<ul>" + text;
+
+    text += "</ul>"; //finish the unordered list
     return text;
     //status_label.html(text);
 }
