@@ -1321,6 +1321,24 @@ for (var index in links){
         link.target_node_id = nodes[link.target].id;
     }
 
+    var link_width = function(d) {
+            if ('vis_width' in d){
+                return d.vis_width;
+            }
+            else {
+                return 1;
+            }
+        }
+
+    var link_color = function(d) {
+            if ('vis_color' in d){
+                return d.vis_color;
+            }
+            else {
+                return "#445878";
+            }
+        }
+
     var line = g_links.selectAll(".link_edge")
     .data(links,
         function(d) { return d.source_node_id + "_" +  d.target_node_id + "_" + d.vis_index})
@@ -1330,8 +1348,12 @@ for (var index in links){
     .style("opacity", line_opacity)
     .attr("d", graph_edge)
     .style("fill", "none")
+    .style("stroke-width", link_width)
+    .style("stroke", link_color)
     .attr("marker-mid", function(d) {
         if (jsondata.directed == true) {
+            //return "";
+            //TODO: only enable for certain graphs - eg not live graphs
             return "url(#mid_marker)";
         }
             return ""; //no marker for undirected
@@ -1350,6 +1372,9 @@ for (var index in links){
     line
     .attr("marker-mid", function(d) {
         if (jsondata.directed == true) {
+            //return "";
+            //TODO: only enable for certain graphs - eg not live graphs
+            //TODO: combine functions rather than repeating
             return "url(#mid_marker)";
         }
             return ""; //no marker for undirected
@@ -1359,6 +1384,8 @@ for (var index in links){
     .duration(500 * transition_multiplier)
     .attr("d", graph_edge)
     .style("opacity", line_opacity)
+    .style("stroke-width", link_width)
+    .style("stroke", link_color)
 
     line.exit().transition()
     .duration(1000 * transition_multiplier)
@@ -1553,6 +1580,7 @@ for (var index in links){
         image
         .attr("width", icon_width)
         .attr("height", icon_height)
+        .attr("xlink:href", function(d) {return "#icon_" + node_icon(d)})
         .transition()
         .style("opacity", icon_opacity)
         .attr("x", function(d) { return d.x + x_offset; })
