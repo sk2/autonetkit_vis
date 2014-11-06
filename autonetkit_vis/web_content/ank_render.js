@@ -1569,6 +1569,26 @@ for (var index in links){
         }
     });
 
+
+        //var drag = d3.behavior.drag()
+            //.on("dragstart", function(){
+                //console.log("here");
+                ////do some drag start stuff...
+            //})
+            //.on("drag", function(){
+                //console.log("hre");
+                //////hey we're dragging, let's update some stuff
+            //})
+            //.on("dragend", function(){
+                //console.log("her");
+                ////we're done, end some stuff
+            //});
+
+        // from http://collaboradev.com/2014/01/24/d3-drag-and-drop/
+        //TODO: could update this to allow moving nodes? and then redraw on drop?
+        //d3.selectAll(".device_icon").call(drag);
+
+
         var device_labels = g_node_labels.selectAll(".device_label")
         .data(nodes, function(d) { return d.id});
 
@@ -1695,6 +1715,9 @@ var marker_names = _.map(path_colors , function(elem){
 
 marker_names = ["path_marker_red", "path_marker_blue"];
 
+path_colors.push("red");
+path_colors.push("blue");
+
 chart.select("defs").selectAll("marker")
     .data(path_colors,  //append marker for this colour if not present
         function(d){ //index by marker name, rather than list position - allows appending later
@@ -1794,7 +1817,7 @@ for (var index in pathinfo) {
     }
 
     var transition_time = function(d) {
-        return 200* _.size(d.path);
+        return transition_multiplier * 200* _.size(d.path);
     }
 
     var path_tension = function(d) {
@@ -1824,7 +1847,7 @@ for (var index in pathinfo) {
         .attr("d", function(d) { return svg_line.tension(path_tension(d))(d['path']); })
         .ease("linear")
         .attr("stroke-dashoffset", 0)
-        .duration(transition_time * transition_multiplier)
+        .duration(transition_time  )
         .transition()
         .attr("stroke-dasharray", "0")
         .attr("marker-end", path_marker_end)
