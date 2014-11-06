@@ -13,3 +13,4 @@ autonetkit_vis.egg-info/SOURCES.txt
 
 build/*
 dist/*
+*.pyc
