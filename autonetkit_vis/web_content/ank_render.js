@@ -598,7 +598,7 @@ var marker_end  = function(d) {
 
 var radius = 20;
 
-var alpha = 0.6;
+var alpha = 0.4;
 
 var link_midpoint = function(d) {
     //TODO: work out if this is inaccurate, or if curve doesnt in fact hit midpoint
