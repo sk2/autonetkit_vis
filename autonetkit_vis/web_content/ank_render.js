@@ -344,18 +344,6 @@ var interface_height = 10;
 //how far out from icon centre to place interface
 var interface_hypotenuse = (icon_width + icon_height)/2;
 
-var interface_angle = function(d){
-    //common to interface_x and interface_y
-    //TODO: need to update to handle parallel links
-    s_x = node_x(d.node);
-    s_y = node_y(d.node);
-    t_x = node_x(d.target);
-    t_y = node_y(d.target);
-
-    angle = Math.atan2( (t_x - s_x), (t_y - s_y));
-    return angle;
-}
-
 var interface_x = function(d) {
     return directed_edge_offset_x(d.node, d.target, interface_hypotenuse, d.link.vis_index) - interface_width/2;
 }
