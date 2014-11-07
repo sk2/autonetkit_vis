@@ -345,11 +345,19 @@ var interface_height = 10;
 var interface_hypotenuse = (icon_width + icon_height)/2;
 
 var interface_x = function(d) {
-    return directed_edge_offset_x(d.node, d.target, interface_hypotenuse, d.link.vis_index) - interface_width/2;
+    vis_index = d.link.vis_index;
+    if (d.node.id > d.target.id) {
+        vis_index = vis_index * -1;
+    }
+    return directed_edge_offset_x(d.node, d.target, interface_hypotenuse, vis_index) - interface_width/2;
 }
 
 var interface_y = function(d) {
-    return directed_edge_offset_y(d.node, d.target, interface_hypotenuse, d.link.vis_index) - interface_height/2;
+    vis_index = d.link.vis_index;
+    if (d.node.id > d.target.id) {
+        vis_index = vis_index * -1;
+    }
+    return directed_edge_offset_y(d.node, d.target, interface_hypotenuse, vis_index) - interface_height/2;
 }
 
 var groupPath = function(d) {
@@ -590,7 +598,7 @@ var marker_end  = function(d) {
 
 var radius = 20;
 
-var alpha = 0.2;
+var alpha = 0.6;
 
 var link_midpoint = function(d) {
     //TODO: work out if this is inaccurate, or if curve doesnt in fact hit midpoint
@@ -698,7 +706,7 @@ var directed_edge_offset_x = function(source, target, hypotenuse, vis_index) {
     s_y = node_y(source);
     t_x = node_x(target);
     t_y = node_y(target);
-    var alpha_local = alpha * vis_index;;
+    var alpha_local = alpha * vis_index;
 
     dx = t_x - s_x;
     dy = t_y - s_y;
