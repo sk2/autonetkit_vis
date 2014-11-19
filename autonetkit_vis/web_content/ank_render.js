@@ -342,22 +342,31 @@ var interface_width = 15;
 var interface_height = 10;
 
 //how far out from icon centre to place interface
-var interface_hypotenuse = (icon_width + icon_height)/2;
+var interface_hypotenuse = (icon_width + icon_height) / 2;
 
-var interface_x = function(d) {
+var calculate_interface_x = function(d) {
     vis_index = d.link.vis_index;
     if (d.node.id > d.target.id) {
         vis_index = vis_index * -1;
     }
-    return directed_edge_offset_x(d.node, d.target, interface_hypotenuse, vis_index) - interface_width/2;
+    return directed_edge_offset_x(d.node, d.target, interface_hypotenuse, vis_index) - interface_width / 2;
 }
 
-var interface_y = function(d) {
+var calculate_interface_y = function(d) {
     vis_index = d.link.vis_index;
     if (d.node.id > d.target.id) {
         vis_index = vis_index * -1;
     }
-    return directed_edge_offset_y(d.node, d.target, interface_hypotenuse, vis_index) - interface_height/2;
+    return directed_edge_offset_y(d.node, d.target, interface_hypotenuse, vis_index) - interface_height / 2;
+}
+
+var interface_x = function(d) {
+    return d.x;
+}
+
+
+var interface_y = function(d) {
+    return d.y;
 }
 
 var groupPath = function(d) {
