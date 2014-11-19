@@ -37,45 +37,45 @@ var propagate_revision_dropdown = function(d, revision_id) {
 
     //"use strict";
 
-    var g_groupings = chart.append("svg:g")
+var g_groupings = container.append("svg:g")
     .attr("id", "g_groupings");
 
-    var g_link_arrows = chart.append("svg:g")
+var g_link_arrows = container.append("svg:g")
     .attr("id", "g_link_arrows");
 
-    var g_links = chart.append("svg:g")
+var g_links = container.append("svg:g")
     .attr("id", "g_links");
 
-    var g_link_highlights = chart.append("svg:g")
+var g_link_highlights = container.append("svg:g")
     .attr("id", "g_link_highlights");
 
-    var g_nodes = chart.append("svg:g")
+var g_nodes = container.append("svg:g")
     .attr("id", "g_nodes");
 
-    var g_node_labels = chart.append("svg:g")
+var g_node_labels = container.append("svg:g")
     .attr("id", "g_node_labels");
 
-    var g_link_labels = chart.append("svg:g")
+var g_link_labels = container.append("svg:g")
     .attr("id", "g_link_labels");
 
-    var g_traces = chart.append("svg:g")
+var g_traces = container.append("svg:g")
     .attr("id", "g_highlights");
 
-    var g_highlights = chart.append("svg:g")
+var g_highlights = container.append("svg:g")
     .attr("id", "g_highlights");
 
-    var g_path_node_annotation_backings = chart.append("svg:g")
+var g_path_node_annotation_backings = container.append("svg:g")
     .attr("id", "g_path_node_annotation_backings");
 
-    var g_path_node_annotations = chart.append("svg:g")
+var g_path_node_annotations = container.append("svg:g")
     .attr("id", "g_path_node_annotations");
 
 
-    var g_interfaces = chart.append("svg:g")
+var g_interfaces = container.append("svg:g")
     .attr("id", "g_interfaces");
 
 //To store svg defs for icons
-chart.append("defs")
+container.append("defs")
 
 var icon_width = 45;
 var icon_height = 45;
