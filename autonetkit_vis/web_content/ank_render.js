@@ -1505,8 +1505,10 @@ for (var index in links){
         //.style("opacity",0)
         .remove();
 
-        var interface_labels = g_interfaces.selectAll(".interface_label")
-        .data(interface_data, function(d) { return d.interface;})
+    var interface_labels = g_interfaces.selectAll(".interface_label")
+        .data(interface_data, function(d) {
+            return ([d.node.label, d.interface]);
+        })
 
         interface_labels.enter().append("text")
         .attr("x", interface_x)
