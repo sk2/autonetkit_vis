@@ -144,46 +144,55 @@ var status_label = d3.select("navbar").append("text")
 .text("")
 ;
 
+var margin = {top: -5, right: -5, bottom: -5, left: -5},
+    width = screen.width - margin.left - margin.right,
+    //height = screen.height - margin.top - margin.bottom - 2*$(".navbar").height();
+    height = 1000;
+
+
 var zoom = d3.behavior.zoom()
-    .scale(1)
-    .scaleExtent([0.4, 8])
-    .on("zoom", redraw);
+    .center([width / 2, height / 2])
+    .scaleExtent([0.5, 10])
+    .on("zoom", zoomed);
 
-//Arbitrary scalings, nodes are adjusted to these
-var chart_width = 1200;
-var chart_height = 1000;
+//TODO: check out view-source:http://computing.dcu.ie/~dganguly/d3sliderzoom.htm
+//var slider = d3.select(".navbar").append("input")
+//  .datum({})
+//  .attr("type", "range")
+//  .attr("value", zoom.scaleExtent()[0])
+//  .attr("min", zoom.scaleExtent()[0])
+//  .attr("max", zoom.scaleExtent()[1])
+//  .attr("step", (zoom.scaleExtent()[1] - zoom.scaleExtent()[0]) / 100)
+  //.on("input", slided);
 
-d3.select(".visualisation");
 
-p = 1;
 
-var chart = d3.select(".visualisation")
-.append("svg:svg")
-.attr("width", "100%")
-.attr("id", "ank_svg")
-.attr("height", "100%")
-.attr("pointer-events", "all")
-.attr("viewBox", "0 0 " + chart_width * 0.85 + " " + chart_height * 0.85)
-.append('svg:g')
-.attr("class", "zoom_box")
-//.call(d3.behavior.zoom().on("zoom", redraw))
-//.attr("transform", "translate(" + p + "," + p + ")")
-.call(zoom)
-.append('svg:g');
+
+
+
+var chart = d3.select("body").append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+  .append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.right + ")")
+    .call(zoom);
+
+
+  var rect = chart.append("rect")
+      .attr("width", width)
+      .attr("height", height)
+      .style("fill", "none")
+      .style("pointer-events", "all");
+
 
 
 //TODO: create an svg:g to contain nodes, another the edges, to avoid overlap
 
-chart.append('svg:rect')
-.attr("class", "chart_rect")
-.attr('width', chart_width)
-.attr('height', chart_height);
+  var container = chart.append("g")
 
-function redraw() {
-    //current_translate = d3.event.translate; // store to use when using slider
-    chart.attr("transform",
-                   "translate(" + d3.event.translate + ")"
-                   + " scale(" + d3.event.scale + ")");
+function zoomed() {
+  container.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
+  //slider.property("value",  d3.event.scale);
 }
 
 function toggle_visibility(id) {
@@ -193,6 +202,21 @@ function toggle_visibility(id) {
        else
           e.style.display = 'block';
     }
+
+
+
+
+
+    function slided(d){
+    x = d3.transform(container.attr("transform")).translate[0];
+    y = d3.transform(container.attr("transform")).translate[1];
+    console.log(x,y);
+
+      zoom.scale(d3.select(this).property("value"))
+    //.translate([x,y])
+        .event(container);
+    }
+
 </script>
 <script type="text/javascript" src="ank_render.js"></script>
 
@@ -206,6 +230,8 @@ var overlay_dropdown = d3.select("#overlay_select")
     update_title(overlay_id, revision_id);
     clear_graph_history();
 });
+
+
 
 </script>
 
