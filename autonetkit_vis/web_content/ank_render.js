@@ -976,6 +976,45 @@ var line_opacity = function(x) {
     return 0.2; //drop opacity for non filtered
 };
 
+var drag = d3.behavior.drag()
+    .origin(function(d) {
+        return d;
+    })
+    .on("dragstart", dragstarted)
+    .on("drag", dragged)
+    .on("dragend", dragended);
+
+
+
+function dragstarted(d) {
+    d3.event.sourceEvent.stopPropagation();
+    d3.select(this).classed("dragging", true);
+}
+
+function dragged(d) {
+    // d3.select(this).attr("x", d.x = d3.event.x).attr("y", d.y = d3.event.y);
+    var elem = this.__data__;
+    elem.x =  d3.event.x;
+    elem.y =  d3.event.y;
+    //TODO: for efficiency look at only updating changed nodes/links
+    redraw();
+}
+
+function dragended(d) {
+    d3.select(this).classed("dragging", false);
+}
+
+var drag2 = d3.behavior.drag()
+    .on("drag", function(d, i) {
+        d.x += d3.event.dx
+        d.y += d3.event.dy
+        var elem = this.__data__;
+        elem.x = d.x;
+        elem.y = d.y;
+        //TODO: for efficiency look at only updating changed nodes/links
+        redraw();
+    });
+
 
 // Store the attributes used for nodes and edges, to allow user to select
 var node_attributes = [];
